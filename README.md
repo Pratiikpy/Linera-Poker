@@ -8,6 +8,42 @@
 
 ---
 
+## 🏆 Linera WaveHack Wave 6 Submission
+
+**NEW:** Full Conway Testnet integration with `@linera/client` library!
+
+### ✅ For Judges - Quick Verification
+
+**Run in browser (no CLI):**
+```bash
+cd frontend
+npm install && npm run dev
+```
+
+**What you'll see:**
+1. 🔵 Auto-connects to Conway Testnet on page load
+2. 🟢 Wallet badge in header shows connection
+3. ✅ Console logs prove @linera/client usage
+
+**📖 Documentation for Judges:**
+- **[JUDGING.md](JUDGING.md)** - 2-minute verification guide
+- **[BUILDATHON.md](BUILDATHON.md)** - Detailed technical documentation
+- **[QUICKSTART.md](QUICKSTART.md)** - Full deployment guide
+
+### 🎯 Key Buildathon Features
+
+| Requirement | Implementation | Evidence |
+|-------------|----------------|----------|
+| **@linera/client Usage** | ✅ `useLineraWallet` hook | `frontend/src/hooks/useLineraWallet.ts:36-56` |
+| **Conway Testnet** | ✅ Auto-connects on load | `frontend/src/App.tsx:61-86` |
+| **Browser-Based** | ✅ No CLI needed | Run `npm run dev` and open browser |
+| **Wallet Integration** | ✅ Faucet wallet | Visible wallet badge in UI |
+| **Linera SDK** | ✅ linera-sdk 0.15 | `table/Cargo.toml:12-13` |
+
+**Time to verify:** < 4 minutes (see [JUDGING.md](JUDGING.md))
+
+---
+
 ## Live Deployment (Conway Testnet)
 
 **Contracts deployed and verified on Conway Testnet - December 15, 2025**
