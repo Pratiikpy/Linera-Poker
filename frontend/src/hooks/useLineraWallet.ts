@@ -55,7 +55,7 @@ export function useLineraWallet(): UseLineraWalletReturn {
 
       console.log('🔵 [Linera Wallet] Connecting to Conway Testnet faucet...')
       // Connect to Conway Testnet faucet
-      const faucet: LineraFaucet = await new linera.Faucet(
+      const faucet: LineraFaucet = new linera.Faucet(
         'https://faucet.testnet-conway.linera.net'
       )
 
@@ -65,7 +65,7 @@ export function useLineraWallet(): UseLineraWalletReturn {
 
       console.log('🔵 [Linera Wallet] Creating client...')
       // Create client: wallet, signer, and boolean flag
-      const newClient: LineraClient = await new linera.Client(
+      const newClient: LineraClient = new linera.Client(
         wallet,
         wallet.signer,
         true
@@ -103,7 +103,7 @@ export function useLineraWallet(): UseLineraWalletReturn {
       console.log('🔵 [Linera Wallet] Requesting additional chain...')
 
       const linera = await import('@linera/client')
-      const faucet: LineraFaucet = await new linera.Faucet(
+      const faucet: LineraFaucet = new linera.Faucet(
         'https://faucet.testnet-conway.linera.net'
       )
 
