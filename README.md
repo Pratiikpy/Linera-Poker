@@ -10,25 +10,27 @@
 
 ## 🏆 Linera WaveHack Wave 6 Submission
 
-**NEW:** Full Conway Testnet integration with `@linera/client` library!
+**🎯 For Judges: See [RUN_DEMO.md](RUN_DEMO.md) for 2-minute setup**
 
-### ✅ For Judges - Quick Verification
+### ✅ Quick Demo (Judges)
 
-**Run in browser (no CLI):**
+**Terminal 1 - Start Linera Service:**
+```bash
+linera service --port 8080
+```
+
+**Terminal 2 - Start Frontend:**
 ```bash
 cd frontend
 npm install && npm run dev
 ```
 
-**What you'll see:**
-1. 🔵 Auto-connects to Conway Testnet on page load
-2. 🟢 Wallet badge in header shows connection
-3. ✅ Console logs prove @linera/client usage
+**Browser:**
+- Open http://localhost:5173
+- Connect wallet (MetaMask)
+- ✅ Table/Player A/Player B show "Connected"
 
-**📖 Documentation for Judges:**
-- **[JUDGING.md](JUDGING.md)** - 2-minute verification guide
-- **[BUILDATHON.md](BUILDATHON.md)** - Detailed technical documentation
-- **[QUICKSTART.md](QUICKSTART.md)** - Full deployment guide
+**📖 Complete Instructions:** [RUN_DEMO.md](RUN_DEMO.md)
 
 ### 🎯 Key Buildathon Features
 
