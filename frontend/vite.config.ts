@@ -2,8 +2,39 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// Plugin to inject document polyfill into workers
+function workerPolyfillPlugin() {
+  return {
+    name: 'worker-polyfill',
+    transform(code: string, id: string) {
+      // Inject polyfill into all worker-related code
+      if (id.includes('worker') || code.includes('wasm_thread_entry_point')) {
+        const polyfill = `
+if (typeof document === 'undefined') {
+  globalThis.document = {
+    getElementById: () => null,
+    createElement: () => ({}),
+    body: {},
+    head: {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    querySelector: () => null,
+    querySelectorAll: () => [],
+  };
+}
+if (typeof window === 'undefined') {
+  globalThis.window = globalThis;
+}
+`
+        return polyfill + code
+      }
+      return code
+    }
+  }
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), workerPolyfillPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
