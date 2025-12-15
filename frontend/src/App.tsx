@@ -13,7 +13,6 @@ import { RefreshCw, Zap, Shield, Link, ChevronRight, Wallet } from 'lucide-react
 export default function App() {
   // Wallet connection (REQUIRED for buildathon)
   const {
-    client: walletClient,
     chainId: walletChainId,
     isConnected: walletConnected,
     isConnecting: walletConnecting,
