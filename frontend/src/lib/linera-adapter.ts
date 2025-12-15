@@ -181,7 +181,7 @@ export class LineraAdapter {
 
         // Step 5: Create DynamicSigner to bridge EVM wallet → Linera
         console.log('🔗 [LineraAdapter] Creating DynamicSigner bridge...')
-        const signer = new DynamicSigner(dynamicWallet)
+        const signer = await new DynamicSigner(dynamicWallet)
         console.log('✅ [LineraAdapter] DynamicSigner created')
 
         // Step 6: Create Linera Client with DynamicSigner
