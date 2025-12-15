@@ -7,12 +7,12 @@ import {
   MessageType,
 } from '../types'
 import {
-  buildGraphQLEndpoint,
   getNetworkConfig,
   getUserFriendlyError,
   ENV,
   type ConnectionStatus,
 } from '../config/network'
+import { blockchainQueryService } from '../services/blockchain-query'
 
 // Get environment variables using validated getters
 const TABLE_CHAIN_ID = ENV.tableChainId()
@@ -80,35 +80,7 @@ const HAND_STATE_QUERY = `
   }
 `
 
-// Fetch with error handling
-async function graphqlFetch<T>(
-  endpoint: string,
-  query: string,
-  variables?: Record<string, unknown>
-): Promise<T> {
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status}`)
-  }
-
-  const result = await response.json()
-
-  if (result.errors) {
-    throw new Error(result.errors[0]?.message || 'GraphQL error')
-  }
-
-  return result.data
-}
+// Removed graphqlFetch - now using blockchainQueryService instead
 
 // Transform snake_case to camelCase for state objects
 function transformTableState(data: any): TableState | null {
@@ -252,33 +224,55 @@ export function useGameState(): UseGameStateReturn {
     []
   )
 
-  // Fetch all state
+  // Fetch all state using blockchain query service
   const fetchState = useCallback(async () => {
+    // Check if blockchain query service is initialized
+    if (!blockchainQueryService.isInitialized()) {
+      console.log('⚠️ [Game State] Blockchain query service not initialized yet')
+      return
+    }
+
     try {
-      // Fetch table state
+      // Fetch table state using blockchain query service
       if (TABLE_CHAIN_ID && TABLE_APP_ID) {
         try {
           setConnectionStatus(prev => ({ ...prev, table: 'connecting' }))
-          const tableEndpoint = buildGraphQLEndpoint(TABLE_CHAIN_ID, TABLE_APP_ID)
-          const tableData = await graphqlFetch(tableEndpoint, TABLE_STATE_QUERY)
+
+          // Parse GraphQL query to object format for service
+          const queryObj = {
+            query: TABLE_STATE_QUERY
+          }
+
+          const tableData = await blockchainQueryService.queryTableState(
+            TABLE_CHAIN_ID,
+            TABLE_APP_ID,
+            queryObj
+          )
+
           setTableState(transformTableState(tableData))
           setConnectionStatus(prev => ({ ...prev, table: 'connected' }))
         } catch (err) {
           console.error('Failed to fetch table state:', err)
           setConnectionStatus(prev => ({ ...prev, table: 'error' }))
-          throw err
+          // Don't throw - allow other fetches to continue
         }
       }
 
-      // Fetch player A state
+      // Fetch player A state using blockchain query service
       if (PLAYER_A_CHAIN_ID && PLAYER_A_HAND_APP_ID) {
         try {
           setConnectionStatus(prev => ({ ...prev, playerA: 'connecting' }))
-          const playerAEndpoint = buildGraphQLEndpoint(
+
+          const queryObj = {
+            query: HAND_STATE_QUERY
+          }
+
+          const playerAData = await blockchainQueryService.queryPlayerAState(
             PLAYER_A_CHAIN_ID,
-            PLAYER_A_HAND_APP_ID
+            PLAYER_A_HAND_APP_ID,
+            queryObj
           )
-          const playerAData = await graphqlFetch(playerAEndpoint, HAND_STATE_QUERY)
+
           setPlayerAState(transformHandState(playerAData))
           setConnectionStatus(prev => ({ ...prev, playerA: 'connected' }))
         } catch (err) {
@@ -288,15 +282,21 @@ export function useGameState(): UseGameStateReturn {
         }
       }
 
-      // Fetch player B state
+      // Fetch player B state using blockchain query service
       if (PLAYER_B_CHAIN_ID && PLAYER_B_HAND_APP_ID) {
         try {
           setConnectionStatus(prev => ({ ...prev, playerB: 'connecting' }))
-          const playerBEndpoint = buildGraphQLEndpoint(
+
+          const queryObj = {
+            query: HAND_STATE_QUERY
+          }
+
+          const playerBData = await blockchainQueryService.queryPlayerBState(
             PLAYER_B_CHAIN_ID,
-            PLAYER_B_HAND_APP_ID
+            PLAYER_B_HAND_APP_ID,
+            queryObj
           )
-          const playerBData = await graphqlFetch(playerBEndpoint, HAND_STATE_QUERY)
+
           setPlayerBState(transformHandState(playerBData))
           setConnectionStatus(prev => ({ ...prev, playerB: 'connected' }))
         } catch (err) {
@@ -324,7 +324,7 @@ export function useGameState(): UseGameStateReturn {
     return () => clearInterval(interval)
   }, [fetchState])
 
-  // Join table action - calls TABLE service directly
+  // Join table action - uses blockchain query service
   const joinTable = useCallback(
     async (player: 'A' | 'B', stake: number) => {
       setLoading(true)
@@ -342,14 +342,21 @@ export function useGameState(): UseGameStateReturn {
           throw new Error('Table not configured. Please run deployment script.')
         }
 
-        // Call TABLE service directly (not hand service)
-        const tableEndpoint = buildGraphQLEndpoint(TABLE_CHAIN_ID, TABLE_APP_ID)
+        // Use blockchain query service for mutation
+        const mutationObj = {
+          query: JOIN_TABLE_MUTATION,
+          variables: {
+            playerChainId,
+            stake: stake.toString(),
+            handAppId: handAppId || null,
+          }
+        }
 
-        await graphqlFetch(tableEndpoint, JOIN_TABLE_MUTATION, {
-          playerChainId,
-          stake: stake.toString(),
-          handAppId: handAppId || null,
-        })
+        await blockchainQueryService.mutateTable(
+          TABLE_CHAIN_ID,
+          TABLE_APP_ID,
+          mutationObj
+        )
 
         // Log the action
         addMessage(
@@ -372,7 +379,7 @@ export function useGameState(): UseGameStateReturn {
     [fetchState, addMessage]
   )
 
-  // Bet action - calls TABLE service directly
+  // Bet action - uses blockchain query service
   const bet = useCallback(
     async (player: 'A' | 'B', action: BetAction) => {
       setLoading(true)
@@ -388,9 +395,6 @@ export function useGameState(): UseGameStateReturn {
         if (!TABLE_CHAIN_ID || !TABLE_APP_ID) {
           throw new Error('Table not configured. Please run deployment script.')
         }
-
-        // Call TABLE service directly
-        const tableEndpoint = buildGraphQLEndpoint(TABLE_CHAIN_ID, TABLE_APP_ID)
 
         // Convert BetAction to GraphQL input format
         let actionInput: Record<string, unknown>
@@ -408,10 +412,20 @@ export function useGameState(): UseGameStateReturn {
           throw new Error('Invalid bet action')
         }
 
-        await graphqlFetch(tableEndpoint, BET_ACTION_MUTATION, {
-          playerChainId,
-          action: actionInput,
-        })
+        // Use blockchain query service for mutation
+        const mutationObj = {
+          query: BET_ACTION_MUTATION,
+          variables: {
+            playerChainId,
+            action: actionInput,
+          }
+        }
+
+        await blockchainQueryService.mutateTable(
+          TABLE_CHAIN_ID,
+          TABLE_APP_ID,
+          mutationObj
+        )
 
         // Log the action
         addMessage(
@@ -434,7 +448,7 @@ export function useGameState(): UseGameStateReturn {
     [fetchState, addMessage]
   )
 
-  // Reveal cards action - calls TABLE service directly
+  // Reveal cards action - uses blockchain query service
   const reveal = useCallback(
     async (player: 'A' | 'B') => {
       setLoading(true)
@@ -452,19 +466,26 @@ export function useGameState(): UseGameStateReturn {
           throw new Error('Table not configured. Please run deployment script.')
         }
 
-        // Call TABLE service directly
-        const tableEndpoint = buildGraphQLEndpoint(TABLE_CHAIN_ID, TABLE_APP_ID)
-
         // Get player's cards from hand state (for now, send empty cards for testing)
         const cards = handState?.hole_cards?.map(c => ({
           suit: c.suit || 'Spades',
           rank: c.rank || 'Two',
         })) || []
 
-        await graphqlFetch(tableEndpoint, REVEAL_MUTATION, {
-          playerChainId,
-          cards,
-        })
+        // Use blockchain query service for mutation
+        const mutationObj = {
+          query: REVEAL_MUTATION,
+          variables: {
+            playerChainId,
+            cards,
+          }
+        }
+
+        await blockchainQueryService.mutateTable(
+          TABLE_CHAIN_ID,
+          TABLE_APP_ID,
+          mutationObj
+        )
 
         // Log the action
         addMessage('RevealCards', `Player ${player}`, 'Table')

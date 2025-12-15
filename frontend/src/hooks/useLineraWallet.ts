@@ -19,6 +19,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import { lineraAdapter } from '../lib/linera-adapter'
+import { blockchainQueryService } from '../services/blockchain-query'
 import type { Client } from '@linera/client'
 
 /**
@@ -109,6 +110,12 @@ export function useLineraWallet(): UseLineraWalletReturn {
       console.log('   Chain ID:', provider.chainId)
       console.log('   Address:', provider.address)
 
+      // Initialize blockchain query service with the client
+      if (provider.client) {
+        await blockchainQueryService.initialize(provider.client)
+        console.log('✅ [Linera Wallet] Blockchain query service initialized')
+      }
+
       // Update React state
       setClient(provider.client)
       setChainId(provider.chainId)
@@ -173,6 +180,9 @@ export function useLineraWallet(): UseLineraWalletReturn {
    */
   const disconnect = useCallback(() => {
     console.log('🔴 [Linera Wallet] Disconnecting...')
+
+    // Reset blockchain query service
+    blockchainQueryService.reset()
 
     // Reset LineraAdapter state
     lineraAdapter.reset()
