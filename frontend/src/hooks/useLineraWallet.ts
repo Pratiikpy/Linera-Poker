@@ -16,7 +16,7 @@
  * 4. Returns client + chainId for app usage
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import { lineraAdapter } from '../lib/linera-adapter'
 import type { Client } from '@linera/client'
@@ -63,6 +63,9 @@ export function useLineraWallet(): UseLineraWalletReturn {
   const [chainId, setChainId] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Ref to prevent multiple connection attempts
+  const connectionAttemptedRef = useRef(false)
 
   /**
    * Connects to Linera using the Dynamic Labs wallet
@@ -180,6 +183,9 @@ export function useLineraWallet(): UseLineraWalletReturn {
     setIsConnecting(false)
     setError(null)
 
+    // Reset connection attempt flag to allow reconnection
+    connectionAttemptedRef.current = false
+
     console.log('✅ [Linera Wallet] Disconnected successfully')
   }, [])
 
@@ -196,18 +202,21 @@ export function useLineraWallet(): UseLineraWalletReturn {
     // Only connect if:
     // 1. Dynamic wallet is connected with address
     // 2. Not already connecting
-    // 3. Not already connected
+    // 3. Not already connected (check chainId as source of truth)
+    // 4. Haven't attempted connection yet (prevents infinite loop)
     if (
       primaryWallet &&
       primaryWallet.address &&
       !isConnecting &&
-      !client
+      !chainId &&
+      !connectionAttemptedRef.current
     ) {
       console.log('🟢 [Linera Wallet] Auto-connecting to Conway Testnet...')
       console.log('   Dynamic Wallet detected:', primaryWallet.address)
+      connectionAttemptedRef.current = true
       connectWallet()
     }
-  }, [primaryWallet, isConnecting, client, connectWallet])
+  }, [primaryWallet, isConnecting, chainId, connectWallet])
 
   /**
    * Handle Dynamic wallet disconnection
@@ -221,11 +230,22 @@ export function useLineraWallet(): UseLineraWalletReturn {
     }
   }, [primaryWallet, client, disconnect])
 
+  /**
+   * Reset connection attempt when wallet address changes
+   *
+   * This allows reconnection when user switches to a different wallet
+   */
+  useEffect(() => {
+    if (primaryWallet?.address) {
+      connectionAttemptedRef.current = false
+    }
+  }, [primaryWallet?.address])
+
   // Return complete wallet state and controls
   return {
     client,
     chainId,
-    isConnected: !!client && !!chainId,
+    isConnected: !!chainId,
     isConnecting,
     error,
     connectWallet,
