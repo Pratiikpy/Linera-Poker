@@ -9,7 +9,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // Critical for WASM - polyfill global and document for worker environments
+  // Critical for WASM - polyfill global for worker environments
   define: {
     global: 'globalThis',
     'process.env': '{}',
