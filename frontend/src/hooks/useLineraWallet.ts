@@ -64,8 +64,13 @@ export function useLineraWallet(): UseLineraWalletReturn {
       const wallet = await faucet.createWallet()
 
       console.log('🔵 [Linera Wallet] Creating client...')
-      // Create client from wallet (wallet contains all needed config)
-      const newClient: LineraClient = new linera.Client(wallet)
+      // Create client with wallet storage, signer, and RPC endpoint
+      // Based on Linera client library signature
+      const newClient: LineraClient = new linera.Client(
+        wallet.storage,
+        wallet.signer,
+        'https://rpc.testnet-conway.linera.net:8080'
+      )
 
       console.log('🔵 [Linera Wallet] Requesting chain with tokens...')
       // Request a chain with tokens from faucet
