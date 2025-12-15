@@ -194,11 +194,7 @@ We are committed to responsible gaming practices. See our [Responsible Gaming Po
 - [Privacy Policy](legal/PRIVACY.md)
 - [Responsible Gaming](legal/RESPONSIBLE_GAMING.md)
 
-## Team
 
-Built by the Linera Poker team.
-
-Contact: [GitHub Issues](https://github.com/linera-poker/linera-poker/issues)
 
 ## License
 
@@ -208,4 +204,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 **Linera Poker** - Provably fair poker. Your cards, your chain, your game.
 
-*Featured in Linera Wave-6 Buildathon*
+*Featured in Linera Wave Buildathon*
+
