@@ -64,12 +64,12 @@ export function useLineraWallet(): UseLineraWalletReturn {
       const wallet = await faucet.createWallet()
 
       console.log('🔵 [Linera Wallet] Creating client...')
-      // Create client: wallet, graphqlEndpoint, signer
+      // Create client: wallet, signer, graphqlEndpoint (correct order!)
       const graphqlEndpoint = 'https://rpc.testnet-conway.linera.net:8080'
       const newClient: LineraClient = await new linera.Client(
         wallet,
-        graphqlEndpoint,
-        wallet.signer
+        wallet.signer,
+        graphqlEndpoint
       )
 
       console.log('🔵 [Linera Wallet] Requesting chain with tokens...')
