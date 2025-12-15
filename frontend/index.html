@@ -6,45 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Linera Poker - Cross-Chain Mental Poker</title>
     <meta name="description" content="Trustless poker where each player's cards are on their own chain. The dealer literally cannot cheat." />
-    <!-- WASM Worker Polyfill - must run BEFORE any worker creation -->
-    <script>
-      // Polyfill for WASM workers that try to access document/window
-      (function() {
-        const originalWorker = window.Worker;
-        window.Worker = class extends originalWorker {
-          constructor(...args) {
-            const worker = super(...args);
-            // Inject polyfill into worker scope via postMessage
-            const originalPostMessage = worker.postMessage.bind(worker);
-            worker.postMessage = function(data, ...rest) {
-              // Inject polyfill code before actual message
-              try {
-                worker.postMessage({__polyfill__: true, code: `
-                  if (typeof document === 'undefined') {
-                    globalThis.document = {
-                      getElementById: () => null,
-                      createElement: () => ({}),
-                      body: {},
-                      head: {},
-                      addEventListener: () => {},
-                      removeEventListener: () => {},
-                      querySelector: () => null,
-                      querySelectorAll: () => [],
-                    };
-                  }
-                  if (typeof window === 'undefined') {
-                    globalThis.window = globalThis;
-                  }
-                `}, []);
-              } catch (e) {}
-              // Send actual message
-              return originalPostMessage(data, ...rest);
-            };
-            return worker;
-          }
-        };
-      })();
-    </script>
   </head>
   <body class="bg-gray-900">
     <div id="root"></div>
