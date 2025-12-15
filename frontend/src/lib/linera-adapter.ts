@@ -187,8 +187,22 @@ export class LineraAdapter {
         // Step 6: Create Linera Client with DynamicSigner
         // IMPORTANT: Use 2 params like Gmic, not 3! Third param causes hang
         console.log('🔗 [LineraAdapter] Creating Linera Client...')
-        const client = await new Client(wallet, signer)
-        console.log('✅ [LineraAdapter] Linera Client created successfully!')
+        console.log('   Wallet:', wallet)
+        console.log('   Signer:', signer)
+
+        let client: Client
+        try {
+          client = await Promise.race([
+            new Client(wallet, signer),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Client creation timeout after 30s')), 30000)
+            )
+          ])
+          console.log('✅ [LineraAdapter] Linera Client created successfully!')
+        } catch (error) {
+          console.error('❌ [LineraAdapter] Client creation failed:', error)
+          throw error
+        }
 
         // Store provider for future use
         this.provider = {
