@@ -185,9 +185,9 @@ export class LineraAdapter {
         console.log('✅ [LineraAdapter] DynamicSigner created')
 
         // Step 6: Create Linera Client with DynamicSigner
-        // Third parameter is likely a boolean flag (e.g., isLocalWallet)
+        // IMPORTANT: Use 2 params like Gmic, not 3! Third param causes hang
         console.log('🔗 [LineraAdapter] Creating Linera Client...')
-        const client = await new Client(wallet, signer, false)
+        const client = await new Client(wallet, signer)
         console.log('✅ [LineraAdapter] Linera Client created successfully!')
 
         // Store provider for future use
