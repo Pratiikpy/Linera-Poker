@@ -1,0 +1,27 @@
+[package]
+name = "linera-poker-table"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "table_contract"
+path = "src/contract.rs"
+
+[[bin]]
+name = "table_service"
+path = "src/service.rs"
+
+[dependencies]
+linera-poker-shared = { path = "../shared" }
+linera-sdk.workspace = true
+serde.workspace = true
+async-trait.workspace = true
+thiserror.workspace = true
+sha2.workspace = true
+async-graphql = "7.0"
+
+[dev-dependencies]
+linera-sdk = { workspace = true, features = ["test"] }

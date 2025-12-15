@@ -1,0 +1,46 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+/frontend/dist/
+*.tsbuildinfo
+
+# Environment files (sensitive)
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.conway
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deployment state (contains chain IDs)
+deploy/.deploy_state
+
+# Linera wallet files
+*.json.bak
+/tmp/
+
+# Compiled JS from TS (keep source)
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# Logs
+*.log

@@ -1,0 +1,33 @@
+{
+  "name": "linera-poker",
+  "description": "Cross-Chain Mental Poker Protocol - The only poker game where the dealer can't cheat because they can't see your cards. Built on Linera microchains for Wave-6 Buildathon.",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Wave-6 Buildathon Team",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@linera/client": "0.15.6",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.554.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hot-toast": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  }
+}
