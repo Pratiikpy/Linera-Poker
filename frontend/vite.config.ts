@@ -9,9 +9,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // Critical for WASM - polyfill global for worker environments
+  // Critical for WASM - polyfill global and document for worker environments
   define: {
     global: 'globalThis',
+    'process.env': '{}',
   },
   // Prevent Vite from optimizing @linera/client (breaks WASM worker initialization)
   optimizeDeps: {
@@ -21,6 +22,11 @@ export default defineConfig({
         '.js': 'jsx',
       },
     },
+  },
+  // Worker configuration to prevent DOM access errors
+  worker: {
+    format: 'es',
+    plugins: () => [],
   },
   server: {
     port: 5173,
