@@ -1,6 +1,5 @@
 # Terms of Service
 
-**Last Updated: December 2024**
 
 ## 1. Acceptance of Terms
 
@@ -57,3 +56,4 @@ For questions about these Terms, please open an issue on our GitHub repository.
 ---
 
 *This is a beta product. Use at your own risk.*
+
