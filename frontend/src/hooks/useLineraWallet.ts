@@ -53,8 +53,8 @@ export function useLineraWallet(): UseLineraWalletReturn {
       await linera.default()
 
       console.log('🔵 [Linera Wallet] Connecting to Conway Testnet faucet...')
-      // Create faucet instance (like lineraodds and Gmic)
-      const faucet: LineraFaucet = new linera.Faucet(
+      // Create faucet instance (EXACT pattern from Gmic winner)
+      const faucet: LineraFaucet = await new linera.Faucet(
         'https://faucet.testnet-conway.linera.net'
       )
 
@@ -62,13 +62,9 @@ export function useLineraWallet(): UseLineraWalletReturn {
       // Create wallet from faucet
       const wallet = await faucet.createWallet()
 
-      console.log('🔵 [Linera Wallet] Creating client...')
-      // Client constructor like Gmic: new Client(wallet, signer)
-      // Use wallet.signer as the signer parameter
-      const newClient: LineraClient = new linera.Client(wallet, wallet.signer)
-
       console.log('🔵 [Linera Wallet] Requesting chain with tokens...')
       // Claim chain from faucet with retry logic for testnet instability
+      // KEY FIX: Pass WALLET (not client!) + owner address
       let newChainId: string | null = null
       let attempts = 0
       const maxAttempts = 3
@@ -77,7 +73,10 @@ export function useLineraWallet(): UseLineraWalletReturn {
         try {
           attempts++
           console.log(`🔵 [Linera Wallet] Claim attempt ${attempts}/${maxAttempts}...`)
-          newChainId = await faucet.claimChain(newClient)
+          // CRITICAL: claimChain(wallet, address) - like Gmic line 66
+          // Get default owner from wallet's public key
+          const ownerAddress = wallet.publicKey().owner().toString()
+          newChainId = await faucet.claimChain(wallet, ownerAddress)
           console.log('✅ [Linera Wallet] Successfully claimed chain!')
           console.log(`   Chain ID: ${newChainId}`)
         } catch (claimError) {
@@ -90,6 +89,10 @@ export function useLineraWallet(): UseLineraWalletReturn {
           }
         }
       }
+
+      console.log('🔵 [Linera Wallet] Creating client...')
+      // Client constructor AFTER claiming chain (like Gmic line 69)
+      const newClient: LineraClient = await new linera.Client(wallet, wallet.signer)
 
       if (!newChainId) {
         throw new Error('Failed to claim chain after multiple attempts')
@@ -120,12 +123,15 @@ export function useLineraWallet(): UseLineraWalletReturn {
       console.log('🔵 [Linera Wallet] Requesting additional chain...')
 
       const linera = await import('@linera/client')
-      const faucet: LineraFaucet = new linera.Faucet(
+      const faucet: LineraFaucet = await new linera.Faucet(
         'https://faucet.testnet-conway.linera.net'
       )
 
-      // Use existing client to claim chain
-      const newChainId: string = await faucet.claimChain(client)
+      // Get wallet from client to claim chain (need wallet + owner address)
+      // NOTE: This may need adjustment based on Client API
+      const wallet = await faucet.createWallet()
+      const ownerAddress = wallet.publicKey().owner().toString()
+      const newChainId: string = await faucet.claimChain(wallet, ownerAddress)
 
       console.log('✅ [Linera Wallet] New chain created:', newChainId)
       return newChainId
