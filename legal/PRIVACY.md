@@ -1,6 +1,5 @@
 # Privacy Policy
 
-**Last Updated: December 2024**
 
 ## Overview
 
@@ -74,3 +73,4 @@ For privacy-related questions, please open an issue on our GitHub repository.
 ---
 
 *Your cards are on YOUR chain. Privacy by architecture, not by promise.*
+
