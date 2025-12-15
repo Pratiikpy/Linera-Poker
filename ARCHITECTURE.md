@@ -1461,6 +1461,7 @@ Thank you for reviewing Linera Poker!
 
 ---
 
-**Built for Linera Wave-6 Buildathon**
+**Built for Linera Wave Buildathon**
 
 *"On any other chain, the dealer would see your cards. Here, they CAN'T - because they're on YOUR chain."*
+
