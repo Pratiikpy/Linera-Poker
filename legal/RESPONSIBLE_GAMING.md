@@ -1,6 +1,5 @@
 # Responsible Gaming Policy
 
-**Last Updated: December 2024**
 
 ## Our Commitment
 
@@ -78,3 +77,4 @@ If you have concerns about responsible gaming, please reach out through our GitH
 ---
 
 *Play for fun. Play responsibly. Know when to stop.*
+
