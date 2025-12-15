@@ -228,7 +228,13 @@ export function useGameState(): UseGameStateReturn {
   const fetchState = useCallback(async () => {
     // Check if blockchain query service is initialized
     if (!blockchainQueryService.isInitialized()) {
-      console.log('⚠️ [Game State] Blockchain query service not initialized yet')
+      // Set all connections to "error" state with helpful message
+      setConnectionStatus({
+        table: 'error',
+        playerA: 'error',
+        playerB: 'error',
+      })
+      setError('Blockchain queries not available in browser. Client creation failed due to WASM worker limitations.')
       return
     }
 

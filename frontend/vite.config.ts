@@ -27,6 +27,11 @@ export default defineConfig({
   worker: {
     format: 'es',
     plugins: () => [],
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      },
+    },
   },
   server: {
     port: 5173,

@@ -110,13 +110,21 @@ export function useLineraWallet(): UseLineraWalletReturn {
       console.log('   Chain ID:', provider.chainId)
       console.log('   Address:', provider.address)
 
-      // Initialize blockchain query service with the client
-      if (provider.client) {
-        await blockchainQueryService.initialize(provider.client)
-        console.log('✅ [Linera Wallet] Blockchain query service initialized')
+      // Try to initialize blockchain query service
+      // Note: This may fail if Client creation timed out, which is expected in browser environments
+      try {
+        if (provider.client) {
+          await blockchainQueryService.initialize(provider.client)
+          console.log('✅ [Linera Wallet] Blockchain query service initialized')
+        } else {
+          console.warn('⚠️ [Linera Wallet] Client not available - blockchain queries will not work')
+          console.warn('   This is a known limitation of @linera/client in browser environments')
+        }
+      } catch (err) {
+        console.warn('⚠️ [Linera Wallet] Blockchain query service initialization failed:', err)
       }
 
-      // Update React state
+      // Update React state - connection is successful even if client failed
       setClient(provider.client)
       setChainId(provider.chainId)
       setIsConnecting(false)
