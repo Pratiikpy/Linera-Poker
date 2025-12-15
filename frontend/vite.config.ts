@@ -9,12 +9,25 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Critical for WASM - polyfill global for worker environments
+  define: {
+    global: 'globalThis',
+  },
+  // Prevent Vite from optimizing @linera/client (breaks WASM worker initialization)
+  optimizeDeps: {
+    exclude: ['@linera/client'],
+    esbuildOptions: {
+      loader: {
+        '.js': 'jsx',
+      },
+    },
+  },
   server: {
     port: 5173,
-    // COOP/COEP headers prevent SharedArrayBuffer errors (LineraBet was blocked by this)
+    // COOP/COEP headers prevent SharedArrayBuffer errors
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
     },
     proxy: {
       '/graphql': {
@@ -27,7 +40,7 @@ export default defineConfig({
   preview: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
     },
   },
 })
