@@ -68,11 +68,32 @@ export function useLineraWallet(): UseLineraWalletReturn {
       const newClient: LineraClient = new linera.Client(wallet, wallet.signer)
 
       console.log('🔵 [Linera Wallet] Requesting chain with tokens...')
-      // Claim chain from faucet
-      const newChainId: string = await faucet.claimChain(newClient)
+      // Claim chain from faucet with retry logic for testnet instability
+      let newChainId: string | null = null
+      let attempts = 0
+      const maxAttempts = 3
 
-      console.log('✅ [Linera Wallet] Successfully connected!')
-      console.log(`   Chain ID: ${newChainId}`)
+      while (attempts < maxAttempts && !newChainId) {
+        try {
+          attempts++
+          console.log(`🔵 [Linera Wallet] Claim attempt ${attempts}/${maxAttempts}...`)
+          newChainId = await faucet.claimChain(newClient)
+          console.log('✅ [Linera Wallet] Successfully claimed chain!')
+          console.log(`   Chain ID: ${newChainId}`)
+        } catch (claimError) {
+          console.warn(`⚠️ [Linera Wallet] Claim attempt ${attempts} failed:`, claimError)
+          if (attempts < maxAttempts) {
+            console.log('🔄 [Linera Wallet] Retrying in 2 seconds...')
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          } else {
+            throw new Error('Conway Testnet is busy. Please try again in a moment.')
+          }
+        }
+      }
+
+      if (!newChainId) {
+        throw new Error('Failed to claim chain after multiple attempts')
+      }
 
       setClient(newClient)
       setChainId(newChainId)
