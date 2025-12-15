@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DynamicConnectButton, useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import { PokerTable } from './components/PokerTable'
 import { PlayerHand } from './components/PlayerHand'
 import { GameControls } from './components/GameControls'
@@ -11,7 +12,10 @@ import { useLineraWallet } from './hooks/useLineraWallet'
 import { RefreshCw, Zap, Shield, Link, ChevronRight, Wallet } from 'lucide-react'
 
 export default function App() {
-  // Wallet connection (REQUIRED for buildathon)
+  // Dynamic Labs wallet context
+  const { primaryWallet } = useDynamicContext()
+
+  // Linera wallet connection (integrates with Dynamic)
   const {
     chainId: walletChainId,
     isConnected: walletConnected,
@@ -56,7 +60,42 @@ export default function App() {
     return () => clearInterval(interval)
   }, [refreshState])
 
-  // WALLET LOADING SCREEN (CRITICAL for buildathon judging)
+  // WALLET CONNECTION PROMPT (Show if no Dynamic wallet connected)
+  if (!primaryWallet) {
+    return (
+      <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--cyan)] opacity-5 rounded-full blur-[128px] animate-pulse" />
+        </div>
+        <div className="max-w-md mx-auto px-8 text-center relative z-10">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[var(--cyan)] to-[var(--gold)] flex items-center justify-center">
+            <Wallet className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: 'Bebas Neue' }}>
+            CONNECT YOUR WALLET
+          </h2>
+          <p className="text-gray-400 mb-6">Connect your EVM wallet to play poker on Linera</p>
+          <DynamicConnectButton>
+            <button
+              className="px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105"
+              style={{
+                fontFamily: 'Bebas Neue',
+                background: 'var(--gradient-gold)',
+                color: '#1a0f0a',
+              }}
+            >
+              CONNECT WALLET
+            </button>
+          </DynamicConnectButton>
+          <p className="mt-4 text-xs text-gray-600">
+            Supports MetaMask, Coinbase Wallet, WalletConnect, and more
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // LINERA INITIALIZATION LOADING (Show while connecting to Linera)
   if (walletConnecting) {
     return (
       <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
@@ -71,8 +110,11 @@ export default function App() {
             CONNECTING TO LINERA
           </h2>
           <p className="text-gray-400 mb-2">Initializing wallet on Conway Testnet...</p>
+          <p className="text-xs text-gray-500 font-mono mb-1">
+            EVM Wallet: {primaryWallet.address?.substring(0, 10)}...
+          </p>
           <p className="text-xs text-gray-600 font-mono">
-            This proves we're using @linera/client 🎯
+            Claiming chain with Dynamic Labs + Linera bridge 🎯
           </p>
           <div className="mt-8 flex items-center justify-center gap-2">
             <div className="w-2 h-2 bg-[var(--cyan)] rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
@@ -262,16 +304,20 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-6">
-            {/* Wallet Status Badge - CRITICAL for judging */}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--emerald)]/10 border border-[var(--emerald)]/30">
-              <Wallet className="w-4 h-4 text-[var(--emerald)]" />
-              <div className="flex flex-col">
-                <span className="text-xs text-[var(--emerald)] font-medium">Conway Testnet</span>
-                <span className="text-[10px] text-gray-500 font-mono">
-                  {walletChainId ? `${walletChainId.substring(0, 8)}...` : 'Connected'}
-                </span>
+            {/* Dynamic Wallet Status Badge - CRITICAL for judging */}
+            {primaryWallet && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--emerald)]/10 border border-[var(--emerald)]/30">
+                <Wallet className="w-4 h-4 text-[var(--emerald)]" />
+                <div className="flex flex-col">
+                  <span className="text-xs text-[var(--emerald)] font-medium">
+                    {primaryWallet.address.substring(0, 6)}...{primaryWallet.address.substring(38)}
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-mono">
+                    {walletChainId ? `Chain: ${walletChainId.substring(0, 8)}...` : 'Conway Testnet'}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Provably Fair Badge */}
             <ProvenanceBadge

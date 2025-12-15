@@ -1,24 +1,40 @@
 /**
- * Linera Wallet Hook
+ * Linera Wallet Hook - Dynamic Labs Integration
  *
- * Manages wallet connection to Conway Testnet using @linera/client
- * This is REQUIRED for buildathon judging - must connect on page load
+ * Manages wallet connection to Conway Testnet using Dynamic Labs EVM wallets
+ * and bridges them to Linera blockchain via the LineraAdapter.
+ *
+ * Key Changes from Original:
+ * - Uses Dynamic Labs instead of direct Linera wallet
+ * - EVM address (MetaMask) bridges to Linera via DynamicSigner
+ * - Maintains same hook interface for backward compatibility
+ *
+ * Connection Flow:
+ * 1. User connects EVM wallet via Dynamic Labs UI
+ * 2. Hook detects wallet connection
+ * 3. LineraAdapter creates Linera wallet with EVM address
+ * 4. Returns client + chainId for app usage
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { lineraAdapter } from '../lib/linera-adapter'
+import type { Client } from '@linera/client'
 
-// Types for Linera client (these match the @linera/client API)
-type LineraClient = any // The actual Client from @linera/client
-type LineraFaucet = any // The actual Faucet from @linera/client
-
+/**
+ * Wallet state interface
+ */
 export interface WalletState {
-  client: LineraClient | null
+  client: Client | null
   chainId: string | null
   isConnected: boolean
   isConnecting: boolean
   error: string | null
 }
 
+/**
+ * Complete return interface for useLineraWallet hook
+ */
 export interface UseLineraWalletReturn extends WalletState {
   connectWallet: () => Promise<void>
   disconnect: () => void
@@ -26,141 +42,186 @@ export interface UseLineraWalletReturn extends WalletState {
 }
 
 /**
- * Hook to manage Linera wallet connection
- * Automatically connects to Conway Testnet on mount
+ * Conway Testnet faucet URL
+ */
+const CONWAY_TESTNET_FAUCET = 'https://faucet.testnet-conway.linera.net'
+
+/**
+ * Hook to manage Linera wallet connection via Dynamic Labs
+ *
+ * Automatically connects when Dynamic wallet becomes available
+ * Maintains connection state and provides disconnect capability
+ *
+ * @returns Wallet state and control functions
  */
 export function useLineraWallet(): UseLineraWalletReturn {
-  const [client, setClient] = useState<LineraClient | null>(null)
+  // Dynamic Labs context - provides EVM wallet
+  const { primaryWallet } = useDynamicContext()
+
+  // Linera connection state
+  const [client, setClient] = useState<Client | null>(null)
   const [chainId, setChainId] = useState<string | null>(null)
-  const [isConnecting, setIsConnecting] = useState(true) // Start as connecting
+  const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   /**
-   * Initialize wallet connection to Conway Testnet
-   * This is called automatically on mount
+   * Connects to Linera using the Dynamic Labs wallet
+   *
+   * This is the core connection function that:
+   * 1. Validates Dynamic wallet is available
+   * 2. Uses LineraAdapter to connect
+   * 3. Updates React state with results
    */
   const connectWallet = useCallback(async () => {
+    // Validate Dynamic wallet is available
+    if (!primaryWallet) {
+      const errorMsg = 'No Dynamic wallet connected. Please connect your wallet first.'
+      console.warn('⚠️ [Linera Wallet]', errorMsg)
+      setError(errorMsg)
+      return
+    }
+
+    if (!primaryWallet.address) {
+      const errorMsg = 'Dynamic wallet has no address. Please reconnect your wallet.'
+      console.warn('⚠️ [Linera Wallet]', errorMsg)
+      setError(errorMsg)
+      return
+    }
+
     try {
       setIsConnecting(true)
       setError(null)
 
-      console.log('🔵 [Linera Wallet] Initializing Linera client...')
+      console.log('🔵 [Linera Wallet] Initializing Linera connection...')
+      console.log('   Dynamic Wallet:', primaryWallet.address)
+      console.log('   Faucet:', CONWAY_TESTNET_FAUCET)
 
-      // Dynamically import @linera/client
-      const linera = await import('@linera/client')
-
-      console.log('🔵 [Linera Wallet] Initializing WASM...')
-      await linera.default()
-
-      console.log('🔵 [Linera Wallet] Connecting to Conway Testnet faucet...')
-      // Create faucet instance (EXACT pattern from Gmic winner)
-      const faucet: LineraFaucet = await new linera.Faucet(
-        'https://faucet.testnet-conway.linera.net'
+      // Use LineraAdapter to handle the complete connection flow
+      const provider = await lineraAdapter.connect(
+        primaryWallet,
+        CONWAY_TESTNET_FAUCET
       )
 
-      console.log('🔵 [Linera Wallet] Creating wallet from faucet...')
-      // Create wallet from faucet
-      const wallet = await faucet.createWallet()
+      console.log('✅ [Linera Wallet] Connection successful!')
+      console.log('   Chain ID:', provider.chainId)
+      console.log('   Address:', provider.address)
 
-      console.log('🔵 [Linera Wallet] Requesting chain with tokens...')
-      // Claim chain from faucet with retry logic for testnet instability
-      // KEY FIX: Pass WALLET (not client!) + owner address
-      let newChainId: string | null = null
-      let attempts = 0
-      const maxAttempts = 3
+      // Update React state
+      setClient(provider.client)
+      setChainId(provider.chainId)
+      setIsConnecting(false)
+    } catch (err) {
+      console.error('❌ [Linera Wallet] Connection failed:', err)
 
-      while (attempts < maxAttempts && !newChainId) {
-        try {
-          attempts++
-          console.log(`🔵 [Linera Wallet] Claim attempt ${attempts}/${maxAttempts}...`)
-          // CRITICAL: claimChain(wallet, address) - like Gmic line 66
-          // Get default owner from wallet's public key
-          const ownerAddress = wallet.publicKey().owner().toString()
-          newChainId = await faucet.claimChain(wallet, ownerAddress)
-          console.log('✅ [Linera Wallet] Successfully claimed chain!')
-          console.log(`   Chain ID: ${newChainId}`)
-        } catch (claimError) {
-          console.warn(`⚠️ [Linera Wallet] Claim attempt ${attempts} failed:`, claimError)
-          if (attempts < maxAttempts) {
-            console.log('🔄 [Linera Wallet] Retrying in 2 seconds...')
-            await new Promise(resolve => setTimeout(resolve, 2000))
-          } else {
-            throw new Error('Conway Testnet is busy. Please try again in a moment.')
-          }
+      // Extract user-friendly error message
+      let errorMessage = 'Failed to connect to Linera'
+      if (err instanceof Error) {
+        errorMessage = err.message
+
+        // Make testnet errors more user-friendly
+        if (errorMessage.includes('Conway Testnet')) {
+          errorMessage = 'Conway Testnet is busy. Please try again in a moment.'
+        } else if (errorMessage.includes('claim')) {
+          errorMessage = 'Failed to claim chain. The testnet may be congested.'
         }
       }
 
-      console.log('🔵 [Linera Wallet] Creating client...')
-      // Client constructor AFTER claiming chain (like Gmic line 69)
-      const newClient: LineraClient = await new linera.Client(wallet, wallet.signer)
-
-      if (!newChainId) {
-        throw new Error('Failed to claim chain after multiple attempts')
-      }
-
-      setClient(newClient)
-      setChainId(newChainId)
-      setIsConnecting(false)
-
-    } catch (err) {
-      console.error('❌ [Linera Wallet] Connection failed:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Unknown wallet error'
       setError(errorMessage)
       setIsConnecting(false)
+      setClient(null)
+      setChainId(null)
     }
-  }, [])
+  }, [primaryWallet])
 
   /**
-   * Request an additional chain from the faucet
+   * Requests an additional chain from the faucet
+   *
+   * Note: This creates a NEW wallet, not tied to the current connection.
+   * May need adjustment based on your use case.
+   *
+   * @returns Promise resolving to new chainId or null on failure
    */
   const requestChain = useCallback(async (): Promise<string | null> => {
-    if (!client) {
-      console.error('❌ [Linera Wallet] Cannot request chain: no client')
+    if (!primaryWallet?.address) {
+      console.error('❌ [Linera Wallet] Cannot request chain: no wallet connected')
       return null
     }
 
     try {
       console.log('🔵 [Linera Wallet] Requesting additional chain...')
 
-      const linera = await import('@linera/client')
-      const faucet: LineraFaucet = await new linera.Faucet(
-        'https://faucet.testnet-conway.linera.net'
-      )
+      // Get faucet from adapter
+      const faucet = lineraAdapter.getFaucet()
 
-      // Get wallet from client to claim chain (need wallet + owner address)
-      // NOTE: This may need adjustment based on Client API
-      const wallet = await faucet.createWallet()
-      const ownerAddress = wallet.publicKey().owner().toString()
-      const newChainId: string = await faucet.claimChain(wallet, ownerAddress)
+      // Create new wallet and claim chain
+      const newWallet = await faucet.createWallet()
+      const newChainId = await faucet.claimChain(newWallet, primaryWallet.address)
 
       console.log('✅ [Linera Wallet] New chain created:', newChainId)
       return newChainId
-
     } catch (err) {
       console.error('❌ [Linera Wallet] Failed to request chain:', err)
       return null
     }
-  }, [client])
+  }, [primaryWallet])
 
   /**
-   * Disconnect wallet and reset state
+   * Disconnects the wallet and resets state
    */
   const disconnect = useCallback(() => {
     console.log('🔴 [Linera Wallet] Disconnecting...')
+
+    // Reset LineraAdapter state
+    lineraAdapter.reset()
+
+    // Reset React state
     setClient(null)
     setChainId(null)
     setIsConnecting(false)
     setError(null)
+
+    console.log('✅ [Linera Wallet] Disconnected successfully')
   }, [])
 
   /**
-   * Auto-connect on mount (REQUIRED for buildathon)
+   * Auto-connect when Dynamic wallet becomes available
+   *
+   * This effect watches for:
+   * - Dynamic wallet connection
+   * - Authentication state changes
+   *
+   * And automatically initiates Linera connection
    */
   useEffect(() => {
-    console.log('🟢 [Linera Wallet] Auto-connecting to Conway Testnet...')
-    connectWallet()
-  }, [connectWallet])
+    // Only connect if:
+    // 1. Dynamic wallet is connected with address
+    // 2. Not already connecting
+    // 3. Not already connected
+    if (
+      primaryWallet &&
+      primaryWallet.address &&
+      !isConnecting &&
+      !client
+    ) {
+      console.log('🟢 [Linera Wallet] Auto-connecting to Conway Testnet...')
+      console.log('   Dynamic Wallet detected:', primaryWallet.address)
+      connectWallet()
+    }
+  }, [primaryWallet, isConnecting, client, connectWallet])
 
+  /**
+   * Handle Dynamic wallet disconnection
+   *
+   * When Dynamic wallet is disconnected, also disconnect Linera
+   */
+  useEffect(() => {
+    if (!primaryWallet && client) {
+      console.log('🔴 [Linera Wallet] Dynamic wallet disconnected, cleaning up...')
+      disconnect()
+    }
+  }, [primaryWallet, client, disconnect])
+
+  // Return complete wallet state and controls
   return {
     client,
     chainId,
@@ -169,6 +230,6 @@ export function useLineraWallet(): UseLineraWalletReturn {
     error,
     connectWallet,
     disconnect,
-    requestChain,
+    requestChain
   }
 }

@@ -13,6 +13,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dynamic-labs/ethereum": "^4.50.3",
+    "@dynamic-labs/sdk-react-core": "^4.50.3",
     "@linera/client": "0.15.6",
     "clsx": "^2.1.1",
     "lucide-react": "^0.554.0",
