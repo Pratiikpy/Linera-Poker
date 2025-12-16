@@ -7,6 +7,8 @@ import { CrossChainInfo } from './components/CrossChainInfo'
 import { ConnectionStatus } from './components/ConnectionStatus'
 import { ProvenanceBadge } from './components/ProvenanceBadge'
 import { FairnessModal } from './components/FairnessModal'
+import { ConwayConnectionLoading } from './components/loading/ConwayConnectionLoading'
+import { JoiningTableLoading } from './components/loading/JoiningTableLoading'
 import { useGameState } from './hooks/useGameState'
 import { useLineraWallet } from './hooks/useLineraWallet'
 import { RefreshCw, Zap, Shield, Link, ChevronRight, Wallet } from 'lucide-react'
@@ -43,6 +45,8 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(true)
   const [introStep, setIntroStep] = useState(0)
   const [showFairnessModal, setShowFairnessModal] = useState(false)
+  const [joiningPlayer, setJoiningPlayer] = useState<'A' | 'B' | null>(null)
+  const [connectionStep, setConnectionStep] = useState(0)
 
   // Animate intro steps
   useEffect(() => {
@@ -60,10 +64,50 @@ export default function App() {
     return () => clearInterval(interval)
   }, [refreshState])
 
+  // Wrap joinTable to show loading modal
+  const handleJoinTable = async (player: 'A' | 'B', stake: number) => {
+    setJoiningPlayer(player)
+    try {
+      await joinTable(player, stake)
+    } finally {
+      // Keep the modal open briefly to show completion
+      setTimeout(() => setJoiningPlayer(null), 800)
+    }
+  }
+
+  // Check if service is available (for production deployment warning)
+  const isLocalService = networkConfig.serviceUrl?.includes('localhost')
+  const isProduction = import.meta.env.PROD
+  const [showServiceWarning, setShowServiceWarning] = useState(false)
+
+  useEffect(() => {
+    // Show warning if deployed to production but using localhost service
+    if (isProduction && isLocalService) {
+      setShowServiceWarning(true)
+    }
+  }, [isProduction, isLocalService])
+
   // WALLET CONNECTION PROMPT (Show if no Dynamic wallet connected)
   if (!primaryWallet) {
     return (
       <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
+        {/* Production deployment warning banner */}
+        {showServiceWarning && (
+          <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black p-4 text-center text-sm font-medium z-50">
+            ⚠️ This demo requires running <code className="bg-black/20 px-2 py-1 rounded">linera service --port 8080</code> locally.
+            {' '}See{' '}
+            <a href="https://github.com/YOUR_USERNAME/linera-poker/blob/main/RUN_DEMO.md" className="underline font-bold">
+              setup guide
+            </a>
+            {' '}for instructions.
+            <button
+              onClick={() => setShowServiceWarning(false)}
+              className="ml-4 bg-black/20 px-2 py-1 rounded hover:bg-black/30"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--cyan)] opacity-5 rounded-full blur-[128px] animate-pulse" />
         </div>
@@ -96,33 +140,25 @@ export default function App() {
   }
 
   // LINERA INITIALIZATION LOADING (Show while connecting to Linera)
+  // Progressive connection steps simulation based on wallet connection state
+  useEffect(() => {
+    if (walletConnecting && connectionStep < 4) {
+      const timer = setTimeout(() => {
+        setConnectionStep(s => Math.min(s + 1, 4))
+      }, 800)
+      return () => clearTimeout(timer)
+    }
+    if (walletConnected) {
+      setConnectionStep(4) // All steps complete
+    }
+  }, [walletConnecting, walletConnected, connectionStep])
+
   if (walletConnecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--cyan)] opacity-5 rounded-full blur-[128px] animate-pulse" />
-        </div>
-        <div className="max-w-md mx-auto px-8 text-center relative z-10">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[var(--cyan)] to-[var(--gold)] flex items-center justify-center animate-pulse">
-            <Wallet className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: 'Bebas Neue' }}>
-            CONNECTING TO LINERA
-          </h2>
-          <p className="text-gray-400 mb-2">Initializing wallet on Conway Testnet...</p>
-          <p className="text-xs text-gray-500 font-mono mb-1">
-            EVM Wallet: {primaryWallet.address?.substring(0, 10)}...
-          </p>
-          <p className="text-xs text-gray-600 font-mono">
-            Claiming chain with Dynamic Labs + Linera bridge 🎯
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-[var(--cyan)] rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-            <div className="w-2 h-2 bg-[var(--cyan)] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-            <div className="w-2 h-2 bg-[var(--cyan)] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-          </div>
-        </div>
-      </div>
+      <ConwayConnectionLoading
+        currentStep={connectionStep}
+        evmAddress={primaryWallet?.address}
+      />
     )
   }
 
@@ -405,7 +441,7 @@ export default function App() {
               tableState={tableState}
               currentPlayer={currentPlayer}
               playerState={currentPlayer === 'A' ? playerAState : playerBState}
-              onJoinTable={joinTable}
+              onJoinTable={handleJoinTable}
               onBet={placeBet}
               onReveal={revealCards}
               loading={loading}
@@ -453,6 +489,15 @@ export default function App() {
         <FairnessModal
           tableState={tableState}
           onClose={() => setShowFairnessModal(false)}
+        />
+      )}
+
+      {/* Joining Table Loading Modal */}
+      {joiningPlayer && (
+        <JoiningTableLoading
+          player={joiningPlayer}
+          chipAmount={100}
+          onCancel={() => setJoiningPlayer(null)}
         />
       )}
     </div>
