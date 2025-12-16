@@ -94,8 +94,9 @@ jobs:
         run: |
           # Run unit tests only (integration tests require wasmer which has Linux setup complexity)
           # Integration tests are verified locally and by judges during evaluation
-          cargo test --lib --all --verbose
-          cargo test --doc --all --verbose
+          # Exclude wasm32 target to avoid "Exec format error"
+          cargo test --lib --all --verbose --target x86_64-unknown-linux-gnu
+          cargo test --doc --all --verbose --target x86_64-unknown-linux-gnu
 
   # WASM Build - builds contracts for wasm32-unknown-unknown target
   build-wasm:
