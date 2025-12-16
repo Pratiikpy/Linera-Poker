@@ -92,7 +92,7 @@ See [NETLIFY_DEPLOYMENT.md](NETLIFY_DEPLOYMENT.md) for deployment details and op
 
 [![Linera Poker Demo](https://img.shields.io/badge/Demo-Coming%20Soon-blue)]()
 
-*See [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) for recording instructions*
+https://youtu.be/xoGuE8tNBq0?si=OK5mAzOMQnOPrSQt
 
 ---
 
@@ -285,6 +285,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Linera Poker** - Provably fair poker. Your cards, your chain, your game.
 
 *Featured in Linera Wave Buildathon*
+
 
 
 
