@@ -556,13 +556,10 @@ impl TableContract {
                 let score1 = evaluate_hand(&p1, community);
                 let score2 = evaluate_hand(&p2, community);
 
-                if score1 > score2 {
-                    Some(Seat::Player1)
-                } else if score2 > score1 {
-                    Some(Seat::Player2)
-                } else {
-                    // FIX #9: Tie - split pot (None means split)
-                    None
+                match score1.cmp(&score2) {
+                    std::cmp::Ordering::Greater => Some(Seat::Player1),
+                    std::cmp::Ordering::Less => Some(Seat::Player2),
+                    std::cmp::Ordering::Equal => None, // FIX #9: Tie - split pot
                 }
             }
             (Some(_), None) => Some(Seat::Player1),

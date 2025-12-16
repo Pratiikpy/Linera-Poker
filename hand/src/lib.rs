@@ -4,7 +4,7 @@
 //! The dealer chain CANNOT access this state - architectural privacy guarantee.
 
 use async_graphql::{Request, Response};
-use linera_sdk::linera_base_types::{Amount, ApplicationId, ChainId, ContractAbi, ServiceAbi};
+use linera_sdk::linera_base_types::{ApplicationId, ChainId, ContractAbi, ServiceAbi};
 use serde::{Deserialize, Serialize};
 
 pub use linera_poker_shared::{

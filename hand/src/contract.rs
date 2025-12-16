@@ -123,7 +123,7 @@ impl Contract for HandContract {
 
             // RELAY messages from player chains to table app
             // These messages arrive here when sent to table_chain via send_to()
-            Message::JoinTable { stake, hand_app_id } => {
+            Message::JoinTable { stake: _, hand_app_id: _ } => {
                 if is_relay {
                     // We're the relay on table chain - forward to table app
                     self.relay_to_table(message).await;
