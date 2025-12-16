@@ -1,4 +1,4 @@
-# Linera Poker
+# Linera Poker  
 
 **The first provably fair poker protocol. Your cards live on YOUR chain.**
 
@@ -285,6 +285,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Linera Poker** - Provably fair poker. Your cards, your chain, your game.
 
 *Featured in Linera Wave Buildathon*
+
 
 
 
