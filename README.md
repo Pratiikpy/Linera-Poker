@@ -68,7 +68,6 @@ npm install && npm run dev
 | **Player A Hand** | `0a946b4759b993db660867f58cd7ec3b1b927d574274ede324ac6d6faeefe735` | `07f31116244dad0e56876141fbaa48ddf4dd53131694b821a2859f412c4d4af7` |
 | **Player B Hand** | `545c9703f298c608e8543afa86bf1509c0d242ad0aed8d255ab6762d18bc81d3` | `9380fea81957b433034fcf2f20ba0a46622f156f14167651fc767d9a31cb4f49` |
 
-**Verify on Conway Explorer**: https://explorer.testnet-conway.linera.net
 
 ### 🌐 Netlify Deployment
 
@@ -217,25 +216,25 @@ See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions.
 - Real-time betting rounds
 - Provably fair showdown
 
-### Phase 2: Multi-Table Support (Q1 2025)
+### Phase 2: Multi-Table Support ()
 - Multiple concurrent tables
 - Variable stake levels
 - Table discovery and lobbies
 - Spectator mode
 
-### Phase 3: Tournament Features (Q2 2025)
+### Phase 3: Tournament Features ()
 - Sit-and-go tournaments
 - Multi-table tournaments (MTT)
 - Prize pool distribution
 - Blind level progression
 
-### Phase 4: Mobile & Social (Q3 2025)
+### Phase 4: Mobile & Social ()
 - Progressive web app (PWA)
 - Friend invites and private tables
 - Player profiles and achievements
 - Cross-chain leaderboards
 
-### Phase 5: DAO Governance (Q4 2025)
+### Phase 5: DAO Governance ()
 - Decentralized rake management
 - Community voting on game rules
 - Revenue sharing for token holders
@@ -286,5 +285,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Linera Poker** - Provably fair poker. Your cards, your chain, your game.
 
 *Featured in Linera Wave Buildathon*
+
 
 
