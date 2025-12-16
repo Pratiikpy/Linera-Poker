@@ -4,8 +4,8 @@ mod state;
 
 use self::state::HandState;
 use linera_poker_hand::{
-    BetAction, Card, CardReveal, GamePhase, GameResultInfo, HandAbi,
-    HandOperation, HandResult, InstantiationArgument, Message,
+    BetAction, Card, CardReveal, GamePhase, GameResultInfo, HandAbi, HandOperation, HandResult,
+    InstantiationArgument, Message,
 };
 use linera_sdk::{
     linera_base_types::{Amount, WithContractAbi},
@@ -55,15 +55,9 @@ impl Contract for HandContract {
             HandOperation::JoinTable { stake } => {
                 self.join_table(Amount::from_tokens(stake.into())).await
             }
-            HandOperation::Bet { action } => {
-                self.send_bet_action(action).await
-            }
-            HandOperation::Reveal => {
-                self.reveal_cards().await
-            }
-            HandOperation::LeaveTable => {
-                self.leave_table().await
-            }
+            HandOperation::Bet { action } => self.send_bet_action(action).await,
+            HandOperation::Reveal => self.reveal_cards().await,
+            HandOperation::LeaveTable => self.leave_table().await,
         }
     }
 
@@ -85,14 +79,21 @@ impl Contract for HandContract {
 
         match message {
             // INCOMING messages from Table chain to player
-            Message::DealCards { game_id, encrypted_cards: _ } => {
+            Message::DealCards {
+                game_id,
+                encrypted_cards: _,
+            } => {
                 // Only process if we're on a player chain (source should be table)
                 if source_chain != table_chain {
                     return; // Reject messages from unauthorized chains
                 }
                 self.state.game_id.set(Some(game_id));
             }
-            Message::CommunityCards { game_id, phase, cards } => {
+            Message::CommunityCards {
+                game_id,
+                phase,
+                cards,
+            } => {
                 // Only process if we're on a player chain (source should be table)
                 if source_chain != table_chain {
                     return; // Reject messages from unauthorized chains
@@ -106,14 +107,24 @@ impl Contract for HandContract {
                 }
                 self.state.my_turn.set(true);
             }
-            Message::YourTurn { game_id, current_bet, pot: _, min_raise: _ } => {
+            Message::YourTurn {
+                game_id,
+                current_bet,
+                pot: _,
+                min_raise: _,
+            } => {
                 // Only process if we're on a player chain (source should be table)
                 if source_chain != table_chain {
                     return; // Reject messages from unauthorized chains
                 }
                 self.handle_your_turn(game_id, current_bet);
             }
-            Message::GameResult { game_id, you_won, payout, opponent_cards } => {
+            Message::GameResult {
+                game_id,
+                you_won,
+                payout,
+                opponent_cards,
+            } => {
                 // Only process if we're on a player chain (source should be table)
                 if source_chain != table_chain {
                     return; // Reject messages from unauthorized chains
@@ -123,7 +134,10 @@ impl Contract for HandContract {
 
             // RELAY messages from player chains to table app
             // These messages arrive here when sent to table_chain via send_to()
-            Message::JoinTable { stake: _, hand_app_id: _ } => {
+            Message::JoinTable {
+                stake: _,
+                hand_app_id: _,
+            } => {
                 if is_relay {
                     // We're the relay on table chain - forward to table app
                     self.relay_to_table(message).await;
@@ -136,13 +150,20 @@ impl Contract for HandContract {
                     self.relay_to_table(message).await;
                 }
             }
-            Message::BetAction { game_id: _, action: _ } => {
+            Message::BetAction {
+                game_id: _,
+                action: _,
+            } => {
                 if is_relay {
                     // We're the relay on table chain - forward to table app
                     self.relay_to_table(message).await;
                 }
             }
-            Message::RevealCards { game_id: _, cards: _, proofs: _ } => {
+            Message::RevealCards {
+                game_id: _,
+                cards: _,
+                proofs: _,
+            } => {
                 if is_relay {
                     // We're the relay on table chain - forward to table app
                     self.relay_to_table(message).await;
@@ -183,51 +204,44 @@ impl HandContract {
         use linera_poker_table::TableOperation;
 
         let operation = match message {
-            Message::JoinTable { stake, hand_app_id } => {
-                TableOperation::RelayJoinTable {
-                    player_chain: source_chain,
-                    stake,
-                    hand_app_id,
-                }
-            }
-            Message::BetAction { game_id, action } => {
-                TableOperation::RelayBetAction {
-                    player_chain: source_chain,
-                    game_id,
-                    action,
-                }
-            }
-            Message::RevealCards { game_id, cards, proofs } => {
-                TableOperation::RelayRevealCards {
-                    player_chain: source_chain,
-                    game_id,
-                    cards,
-                    proofs,
-                }
-            }
-            Message::LeaveTable => {
-                TableOperation::RelayLeaveTable {
-                    player_chain: source_chain,
-                }
-            }
-            Message::CardsReceived { game_id } => {
-                TableOperation::RelayCardsReceived {
-                    player_chain: source_chain,
-                    game_id,
-                }
-            }
+            Message::JoinTable { stake, hand_app_id } => TableOperation::RelayJoinTable {
+                player_chain: source_chain,
+                stake,
+                hand_app_id,
+            },
+            Message::BetAction { game_id, action } => TableOperation::RelayBetAction {
+                player_chain: source_chain,
+                game_id,
+                action,
+            },
+            Message::RevealCards {
+                game_id,
+                cards,
+                proofs,
+            } => TableOperation::RelayRevealCards {
+                player_chain: source_chain,
+                game_id,
+                cards,
+                proofs,
+            },
+            Message::LeaveTable => TableOperation::RelayLeaveTable {
+                player_chain: source_chain,
+            },
+            Message::CardsReceived { game_id } => TableOperation::RelayCardsReceived {
+                player_chain: source_chain,
+                game_id,
+            },
             // Table->Hand messages should not be relayed
             _ => return,
         };
 
         // Use call_application to invoke the operation on the table app
         // We use authenticated=true to preserve the original message sender's authentication
-        let _result = self.runtime
-            .call_application(
-                /* authenticated */ true,
-                table_app.with_abi::<linera_poker_table::TableAbi>(),
-                &operation,
-            );
+        let _result = self.runtime.call_application(
+            /* authenticated */ true,
+            table_app.with_abi::<linera_poker_table::TableAbi>(),
+            &operation,
+        );
 
         // Note: We ignore the result here. In a production system, you might want to:
         // 1. Log errors for debugging
@@ -261,12 +275,7 @@ impl HandContract {
     }
 
     /// Handle receiving cards
-    fn handle_community_cards(
-        &mut self,
-        game_id: u64,
-        phase: GamePhase,
-        cards: Vec<CardReveal>,
-    ) {
+    fn handle_community_cards(&mut self, game_id: u64, phase: GamePhase, cards: Vec<CardReveal>) {
         if self.state.game_id.get() != &Some(game_id) && self.state.game_id.get().is_some() {
             return;
         }
@@ -352,7 +361,11 @@ impl HandContract {
             .collect();
 
         self.runtime
-            .prepare_message(Message::RevealCards { game_id, cards, proofs })
+            .prepare_message(Message::RevealCards {
+                game_id,
+                cards,
+                proofs,
+            })
             .with_authentication()
             .send_to(table_chain);
 

@@ -1,10 +1,10 @@
 //! Table contract state using Linera views
 
+use linera_poker_shared::{Card, GamePhase, PlayerInfo, Seat};
 use linera_sdk::{
     linera_base_types::Amount,
     views::{linera_views, RegisterView, RootView, ViewStorageContext},
 };
-use linera_poker_shared::{Card, GamePhase, PlayerInfo, Seat};
 
 /// Table state stored on-chain using views
 #[derive(RootView)]

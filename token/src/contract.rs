@@ -4,8 +4,7 @@ mod state;
 
 use self::state::TokenState;
 use linera_poker_token::{
-    InstantiationArgument, Message, TokenAbi, TokenError,
-    TokenOperation, TokenResult,
+    InstantiationArgument, Message, TokenAbi, TokenError, TokenOperation, TokenResult,
 };
 use linera_sdk::{
     linera_base_types::{Amount, ChainId, WithContractAbi},
@@ -38,24 +37,34 @@ impl Contract for TokenContract {
     }
 
     async fn instantiate(&mut self, arg: InstantiationArgument) {
-        self.state.balance.set(Amount::from_tokens(arg.initial_balance.into()));
+        self.state
+            .balance
+            .set(Amount::from_tokens(arg.initial_balance.into()));
         self.state.locked.set(Amount::ZERO);
         self.state.owner.set(Some(arg.owner));
     }
 
     async fn execute_operation(&mut self, operation: TokenOperation) -> TokenResult {
         match operation {
-            TokenOperation::Deposit { amount } => {
-                self.deposit(Amount::from_tokens(amount.into()))
-            }
+            TokenOperation::Deposit { amount } => self.deposit(Amount::from_tokens(amount.into())),
             TokenOperation::Withdraw { amount } => {
                 self.withdraw(Amount::from_tokens(amount.into()))
             }
-            TokenOperation::LockForGame { amount, table_chain, game_id } => {
-                self.lock_stake(Amount::from_tokens(amount.into()), table_chain, game_id).await
+            TokenOperation::LockForGame {
+                amount,
+                table_chain,
+                game_id,
+            } => {
+                self.lock_stake(Amount::from_tokens(amount.into()), table_chain, game_id)
+                    .await
             }
-            TokenOperation::Transfer { to_chain, amount, game_id } => {
-                self.transfer(to_chain, Amount::from_tokens(amount.into()), game_id).await
+            TokenOperation::Transfer {
+                to_chain,
+                amount,
+                game_id,
+            } => {
+                self.transfer(to_chain, Amount::from_tokens(amount.into()), game_id)
+                    .await
             }
         }
     }
@@ -63,7 +72,10 @@ impl Contract for TokenContract {
     async fn execute_message(&mut self, message: Message) {
         match message {
             // INCOMING messages from Table chain
-            Message::LockStake { game_id: _, amount: _ } => {
+            Message::LockStake {
+                game_id: _,
+                amount: _,
+            } => {
                 // Acknowledgment - stake already locked via operation
             }
             Message::Payout { game_id: _, amount } => {
@@ -109,7 +121,12 @@ impl TokenContract {
 
     /// Lock stake for a game
     /// FIX #3: CRITICAL - Accept and use actual game_id instead of hardcoded 0
-    async fn lock_stake(&mut self, amount: Amount, table_chain: ChainId, game_id: u64) -> TokenResult {
+    async fn lock_stake(
+        &mut self,
+        amount: Amount,
+        table_chain: ChainId,
+        game_id: u64,
+    ) -> TokenResult {
         let balance = *self.state.balance.get();
         let locked = *self.state.locked.get();
         let available = balance.saturating_sub(locked);
@@ -122,10 +139,7 @@ impl TokenContract {
 
         // FIX #3: Use actual game_id parameter
         self.runtime
-            .prepare_message(Message::StakeLocked {
-                game_id,
-                amount,
-            })
+            .prepare_message(Message::StakeLocked { game_id, amount })
             .with_authentication()
             .send_to(table_chain);
 
@@ -160,10 +174,7 @@ impl TokenContract {
 
         // FIX #3: Use actual game_id parameter
         self.runtime
-            .prepare_message(Message::Payout {
-                game_id,
-                amount,
-            })
+            .prepare_message(Message::Payout { game_id, amount })
             .with_authentication()
             .send_to(to_chain);
 

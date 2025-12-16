@@ -3,18 +3,17 @@
 mod state;
 
 use self::state::TableState;
+use linera_poker_shared::{evaluate_hand, shuffle_deck};
 use linera_poker_table::{
-    BetAction, Card, CardReveal, GamePhase,
-    InstantiationArgument, Message, PlayerInfo, Seat, TableAbi, TableResult,
-    TableOperation,
+    BetAction, Card, CardReveal, GamePhase, InstantiationArgument, Message, PlayerInfo, Seat,
+    TableAbi, TableOperation, TableResult,
 };
-use linera_poker_shared::{shuffle_deck, evaluate_hand};
 use linera_sdk::{
-    linera_base_types::{Amount, ApplicationId, ChainId, AccountOwner, WithContractAbi},
+    linera_base_types::{AccountOwner, Amount, ApplicationId, ChainId, WithContractAbi},
     views::{RootView, View},
     Contract, ContractRuntime,
 };
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 pub struct TableContract {
     state: TableState,
@@ -46,16 +45,26 @@ impl Contract for TableContract {
         self.state.players.set(Vec::new());
         self.state.pot.set(Amount::ZERO);
         self.state.current_bet.set(Amount::ZERO);
-        self.state.min_raise.set(Amount::from_tokens(arg.big_blind.into())); // Min raise = big blind
+        self.state
+            .min_raise
+            .set(Amount::from_tokens(arg.big_blind.into())); // Min raise = big blind
         self.state.community_cards.set(Vec::new());
         self.state.turn_seat.set(None);
         self.state.winner.set(None);
-        self.state.min_stake.set(Amount::from_tokens(arg.min_stake.into()));
-        self.state.max_stake.set(Amount::from_tokens(arg.max_stake.into()));
+        self.state
+            .min_stake
+            .set(Amount::from_tokens(arg.min_stake.into()));
+        self.state
+            .max_stake
+            .set(Amount::from_tokens(arg.max_stake.into()));
         self.state.revealed_cards.set(Vec::new());
         // Initialize blinds
-        self.state.small_blind.set(Amount::from_tokens(arg.small_blind.into()));
-        self.state.big_blind.set(Amount::from_tokens(arg.big_blind.into()));
+        self.state
+            .small_blind
+            .set(Amount::from_tokens(arg.small_blind.into()));
+        self.state
+            .big_blind
+            .set(Amount::from_tokens(arg.big_blind.into()));
         self.state.dealer_button.set(None);
     }
 
@@ -71,27 +80,45 @@ impl Contract for TableContract {
             }
 
             // Relay operations from hand app on table chain
-            TableOperation::RelayJoinTable { player_chain, stake, hand_app_id } => {
+            TableOperation::RelayJoinTable {
+                player_chain,
+                stake,
+                hand_app_id,
+            } => {
                 self.handle_join(player_chain, stake, hand_app_id).await;
                 TableResult::Success
             }
-            TableOperation::RelayBetAction { player_chain, game_id: _, action } => {
+            TableOperation::RelayBetAction {
+                player_chain,
+                game_id: _,
+                action,
+            } => {
                 // Use current game_id from state instead of passed value
                 let current_game_id = *self.state.game_id.get();
-                self.handle_bet_action(player_chain, current_game_id, action).await;
+                self.handle_bet_action(player_chain, current_game_id, action)
+                    .await;
                 TableResult::Success
             }
-            TableOperation::RelayRevealCards { player_chain, game_id: _, cards, proofs } => {
+            TableOperation::RelayRevealCards {
+                player_chain,
+                game_id: _,
+                cards,
+                proofs,
+            } => {
                 // Use current game_id from state instead of passed value
                 let current_game_id = *self.state.game_id.get();
-                self.handle_reveal(player_chain, current_game_id, cards, proofs).await;
+                self.handle_reveal(player_chain, current_game_id, cards, proofs)
+                    .await;
                 TableResult::Success
             }
             TableOperation::RelayLeaveTable { player_chain } => {
                 self.handle_leave(player_chain);
                 TableResult::Success
             }
-            TableOperation::RelayCardsReceived { player_chain: _, game_id: _ } => {
+            TableOperation::RelayCardsReceived {
+                player_chain: _,
+                game_id: _,
+            } => {
                 // Acknowledgment only
                 TableResult::Success
             }
@@ -115,8 +142,13 @@ impl Contract for TableContract {
             Message::BetAction { game_id, action } => {
                 self.handle_bet_action(source_chain, game_id, action).await;
             }
-            Message::RevealCards { game_id, cards, proofs } => {
-                self.handle_reveal(source_chain, game_id, cards, proofs).await;
+            Message::RevealCards {
+                game_id,
+                cards,
+                proofs,
+            } => {
+                self.handle_reveal(source_chain, game_id, cards, proofs)
+                    .await;
             }
             Message::LeaveTable => {
                 self.handle_leave(source_chain);
@@ -133,12 +165,7 @@ impl Contract for TableContract {
 
 impl TableContract {
     /// Handle player joining
-    async fn handle_join(
-        &mut self,
-        player_chain: ChainId,
-        stake: Amount,
-        hand_app: ApplicationId,
-    ) {
+    async fn handle_join(&mut self, player_chain: ChainId, stake: Amount, hand_app: ApplicationId) {
         let phase = self.state.phase.get();
         if *phase != GamePhase::WaitingForPlayers {
             return;
@@ -165,7 +192,10 @@ impl TableContract {
             Seat::Player2
         };
 
-        let owner = self.runtime.authenticated_signer().unwrap_or(AccountOwner::CHAIN);
+        let owner = self
+            .runtime
+            .authenticated_signer()
+            .unwrap_or(AccountOwner::CHAIN);
 
         players.push(PlayerInfo {
             seat,
@@ -245,8 +275,14 @@ impl TableContract {
 
             // Create reveals for the dealt cards
             let reveals = vec![
-                CardReveal { card: card1, secret: dealer_secret.clone() },
-                CardReveal { card: card2, secret: dealer_secret.clone() },
+                CardReveal {
+                    card: card1,
+                    secret: dealer_secret.clone(),
+                },
+                CardReveal {
+                    card: card2,
+                    secret: dealer_secret.clone(),
+                },
             ];
 
             if player.hand_app.is_some() {
@@ -277,12 +313,7 @@ impl TableContract {
     }
 
     /// Handle betting action
-    async fn handle_bet_action(
-        &mut self,
-        player_chain: ChainId,
-        game_id: u64,
-        action: BetAction,
-    ) {
+    async fn handle_bet_action(&mut self, player_chain: ChainId, game_id: u64, action: BetAction) {
         if game_id != *self.state.game_id.get() {
             return;
         }
@@ -325,7 +356,8 @@ impl TableContract {
                 }
 
                 // FIX #6: HIGH - Validate bet against player's available stack
-                let player_remaining = players[player_idx].stake
+                let player_remaining = players[player_idx]
+                    .stake
                     .saturating_sub(players[player_idx].current_bet);
                 let new_bet = current_bet.saturating_add(amount);
                 let required = new_bet.saturating_sub(players[player_idx].current_bet);
@@ -340,7 +372,8 @@ impl TableContract {
                 pot = pot.saturating_add(addition);
             }
             BetAction::AllIn => {
-                let remaining = players[player_idx].stake
+                let remaining = players[player_idx]
+                    .stake
                     .saturating_sub(players[player_idx].current_bet);
                 let new_bet = players[player_idx].current_bet.saturating_add(remaining);
                 if new_bet > current_bet {
@@ -352,7 +385,8 @@ impl TableContract {
             BetAction::Fold => {
                 // FIX #8: MEDIUM - Check if opponent already folded (edge case)
                 let opponent_seat = player_seat.other();
-                let opponent_folded = players.iter()
+                let opponent_folded = players
+                    .iter()
                     .find(|p| p.seat == opponent_seat)
                     .map(|p| p.has_folded)
                     .unwrap_or(false);
@@ -546,8 +580,14 @@ impl TableContract {
         let community = self.state.community_cards.get();
 
         // Find each player's hole cards
-        let p1_cards = revealed.iter().find(|(s, _)| *s == Seat::Player1).map(|(_, c)| c.clone());
-        let p2_cards = revealed.iter().find(|(s, _)| *s == Seat::Player2).map(|(_, c)| c.clone());
+        let p1_cards = revealed
+            .iter()
+            .find(|(s, _)| *s == Seat::Player1)
+            .map(|(_, c)| c.clone());
+        let p2_cards = revealed
+            .iter()
+            .find(|(s, _)| *s == Seat::Player2)
+            .map(|(_, c)| c.clone());
 
         // FIX #9: MEDIUM - Implement pot splitting for ties
         let winner = match (p1_cards, p2_cards) {

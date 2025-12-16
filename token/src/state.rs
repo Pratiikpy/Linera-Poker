@@ -1,7 +1,7 @@
 //! Token contract state using Linera views
 
 use linera_sdk::{
-    linera_base_types::{Amount, AccountOwner},
+    linera_base_types::{AccountOwner, Amount},
     views::{linera_views, RegisterView, RootView, ViewStorageContext},
 };
 

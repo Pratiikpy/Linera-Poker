@@ -8,8 +8,7 @@ use linera_sdk::linera_base_types::{Amount, ApplicationId, ChainId, ContractAbi,
 use serde::{Deserialize, Serialize};
 
 pub use linera_poker_shared::{
-    BetAction, Card, CardReveal, EncryptedCard, GamePhase,
-    PlayerInfo, Seat, TableState,
+    BetAction, Card, CardReveal, EncryptedCard, GamePhase, PlayerInfo, Seat, TableState,
 };
 
 /// Table contract ABI
@@ -84,14 +83,9 @@ pub enum TableOperation {
         proofs: Vec<CardReveal>,
     },
     /// Player leaves table (relayed message)
-    RelayLeaveTable {
-        player_chain: ChainId,
-    },
+    RelayLeaveTable { player_chain: ChainId },
     /// Player acknowledges cards received (relayed message)
-    RelayCardsReceived {
-        player_chain: ChainId,
-        game_id: u64,
-    },
+    RelayCardsReceived { player_chain: ChainId, game_id: u64 },
 }
 
 /// Instantiation argument

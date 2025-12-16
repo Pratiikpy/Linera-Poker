@@ -6,8 +6,8 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use linera_poker_table::{
-    BetAction, GamePhase, InstantiationArgument, Message, Seat,
-    TableAbi, TableOperation, TableResult,
+    BetAction, GamePhase, InstantiationArgument, Message, Seat, TableAbi, TableOperation,
+    TableResult,
 };
 use linera_sdk::{
     linera_base_types::Amount,
@@ -242,10 +242,7 @@ async fn test_betting_round() {
 
     // Verify bet was processed
     let QueryOutcome { response, .. } = table_chain
-        .graphql_query(
-            app_id,
-            "query { state { phase pot currentBet } }",
-        )
+        .graphql_query(app_id, "query { state { phase pot currentBet } }")
         .await;
 
     let pot_after_call = response["state"]["pot"]
@@ -530,10 +527,7 @@ async fn test_invalid_stake_rejected() {
 
     // Verify player was NOT added
     let QueryOutcome { response, .. } = table_chain
-        .graphql_query(
-            app_id,
-            "query { state { players { seat } } }",
-        )
+        .graphql_query(app_id, "query { state { players { seat } } }")
         .await;
 
     let players = response["state"]["players"].as_array().unwrap();
@@ -559,10 +553,7 @@ async fn test_invalid_stake_rejected() {
 
     // Verify player was still NOT added
     let QueryOutcome { response, .. } = table_chain
-        .graphql_query(
-            app_id,
-            "query { state { players { seat } } }",
-        )
+        .graphql_query(app_id, "query { state { players { seat } } }")
         .await;
 
     let players = response["state"]["players"].as_array().unwrap();
@@ -588,10 +579,7 @@ async fn test_invalid_stake_rejected() {
 
     // Verify player WAS added with valid stake
     let QueryOutcome { response, .. } = table_chain
-        .graphql_query(
-            app_id,
-            "query { state { players { seat } } }",
-        )
+        .graphql_query(app_id, "query { state { players { seat } } }")
         .await;
 
     let players = response["state"]["players"].as_array().unwrap();

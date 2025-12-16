@@ -4,7 +4,7 @@
 //! Demonstrates TRUE Linera token sovereignty - no one can take your chips without permission.
 
 use async_graphql::{Request, Response};
-use linera_sdk::linera_base_types::{Amount, ChainId, ContractAbi, ServiceAbi, AccountOwner};
+use linera_sdk::linera_base_types::{AccountOwner, Amount, ChainId, ContractAbi, ServiceAbi};
 use serde::{Deserialize, Serialize};
 
 /// Token contract ABI
@@ -49,10 +49,18 @@ pub enum TokenOperation {
     Withdraw { amount: u64 },
     /// Lock stake for a game
     /// FIX #3: Added game_id parameter
-    LockForGame { amount: u64, table_chain: ChainId, game_id: u64 },
+    LockForGame {
+        amount: u64,
+        table_chain: ChainId,
+        game_id: u64,
+    },
     /// Transfer to another chain
     /// FIX #3: Added game_id parameter
-    Transfer { to_chain: ChainId, amount: u64, game_id: u64 },
+    Transfer {
+        to_chain: ChainId,
+        amount: u64,
+        game_id: u64,
+    },
 }
 
 /// Instantiation argument
@@ -69,35 +77,18 @@ pub enum Message {
     // ═══════════════════════════════════════════════════════════════════
     // INCOMING from Table chain
     // ═══════════════════════════════════════════════════════════════════
-
     /// Request player to lock stake for game
-    LockStake {
-        game_id: u64,
-        amount: Amount,
-    },
+    LockStake { game_id: u64, amount: Amount },
     /// Payout winnings to player
-    Payout {
-        game_id: u64,
-        amount: Amount,
-    },
+    Payout { game_id: u64, amount: Amount },
     /// Refund stake (game cancelled)
-    Refund {
-        game_id: u64,
-        amount: Amount,
-    },
+    Refund { game_id: u64, amount: Amount },
 
     // ═══════════════════════════════════════════════════════════════════
     // OUTGOING to Table chain
     // ═══════════════════════════════════════════════════════════════════
-
     /// Stake has been locked
-    StakeLocked {
-        game_id: u64,
-        amount: Amount,
-    },
+    StakeLocked { game_id: u64, amount: Amount },
     /// Stake lock failed (insufficient funds)
-    StakeFailed {
-        game_id: u64,
-        reason: String,
-    },
+    StakeFailed { game_id: u64, reason: String },
 }

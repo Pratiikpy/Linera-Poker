@@ -5,8 +5,8 @@ mod state;
 use std::sync::Arc;
 
 use self::state::HandState;
-use async_graphql::{EmptySubscription, Enum, InputObject, Object, Schema, Request, Response};
-use linera_poker_hand::{HandAbi, HandOperation, BetAction};
+use async_graphql::{EmptySubscription, Enum, InputObject, Object, Request, Response, Schema};
+use linera_poker_hand::{BetAction, HandAbi, HandOperation};
 use linera_sdk::{
     linera_base_types::{Amount, WithServiceAbi},
     views::View,
@@ -39,8 +39,12 @@ impl Service for HandService {
 
     async fn handle_query(&self, request: Request) -> Response {
         let schema = Schema::build(
-            QueryRoot { state: self.state.clone() },
-            MutationRoot { runtime: self.runtime.clone() },
+            QueryRoot {
+                state: self.state.clone(),
+            },
+            MutationRoot {
+                runtime: self.runtime.clone(),
+            },
             EmptySubscription,
         )
         .finish();
@@ -60,20 +64,37 @@ impl QueryRoot {
             game_id: *self.state.game_id.get(),
             table_chain: self.state.table_chain.get().map(|c| c.to_string()),
             seat: self.state.seat.get().map(|s| format!("{:?}", s)),
-            hole_cards: self.state.hole_cards.get().iter().map(|c| CardView {
-                suit: format!("{:?}", c.suit),
-                rank: format!("{:?}", c.rank),
-            }).collect(),
-            community_cards: self.state.community_cards.get().iter().map(|c| CardView {
-                suit: format!("{:?}", c.suit),
-                rank: format!("{:?}", c.rank),
-            }).collect(),
+            hole_cards: self
+                .state
+                .hole_cards
+                .get()
+                .iter()
+                .map(|c| CardView {
+                    suit: format!("{:?}", c.suit),
+                    rank: format!("{:?}", c.rank),
+                })
+                .collect(),
+            community_cards: self
+                .state
+                .community_cards
+                .get()
+                .iter()
+                .map(|c| CardView {
+                    suit: format!("{:?}", c.suit),
+                    rank: format!("{:?}", c.rank),
+                })
+                .collect(),
             current_bet: self.state.current_bet.get().to_string(),
             my_turn: *self.state.my_turn.get(),
-            game_result: self.state.game_result.get().as_ref().map(|r| GameResultView {
-                won: r.won,
-                payout: r.payout.to_string(),
-            }),
+            game_result: self
+                .state
+                .game_result
+                .get()
+                .as_ref()
+                .map(|r| GameResultView {
+                    won: r.won,
+                    payout: r.payout.to_string(),
+                }),
         }
     }
 
@@ -84,18 +105,28 @@ impl QueryRoot {
 
     /// Get our hole cards (PRIVATE!)
     async fn hole_cards(&self) -> Vec<CardView> {
-        self.state.hole_cards.get().iter().map(|c| CardView {
-            suit: format!("{:?}", c.suit),
-            rank: format!("{:?}", c.rank),
-        }).collect()
+        self.state
+            .hole_cards
+            .get()
+            .iter()
+            .map(|c| CardView {
+                suit: format!("{:?}", c.suit),
+                rank: format!("{:?}", c.rank),
+            })
+            .collect()
     }
 
     /// Get community cards
     async fn community_cards(&self) -> Vec<CardView> {
-        self.state.community_cards.get().iter().map(|c| CardView {
-            suit: format!("{:?}", c.suit),
-            rank: format!("{:?}", c.rank),
-        }).collect()
+        self.state
+            .community_cards
+            .get()
+            .iter()
+            .map(|c| CardView {
+                suit: format!("{:?}", c.suit),
+                rank: format!("{:?}", c.rank),
+            })
+            .collect()
     }
 
     /// Is it our turn?
@@ -105,10 +136,14 @@ impl QueryRoot {
 
     /// Get game result
     async fn game_result(&self) -> Option<GameResultView> {
-        self.state.game_result.get().as_ref().map(|r| GameResultView {
-            won: r.won,
-            payout: r.payout.to_string(),
-        })
+        self.state
+            .game_result
+            .get()
+            .as_ref()
+            .map(|r| GameResultView {
+                won: r.won,
+                payout: r.payout.to_string(),
+            })
     }
 }
 
@@ -121,7 +156,9 @@ impl MutationRoot {
     /// Join a poker table with the specified stake
     async fn join_table(&self, stake: String) -> bool {
         let stake_amount: u64 = stake.parse().unwrap_or(0);
-        let operation = HandOperation::JoinTable { stake: stake_amount };
+        let operation = HandOperation::JoinTable {
+            stake: stake_amount,
+        };
         self.runtime.schedule_operation(&operation);
         true
     }
@@ -132,7 +169,11 @@ impl MutationRoot {
             BetActionType::Check => BetAction::Check,
             BetActionType::Call => BetAction::Call,
             BetActionType::Raise => {
-                let amount = action.amount.unwrap_or_default().parse::<u128>().unwrap_or(0);
+                let amount = action
+                    .amount
+                    .unwrap_or_default()
+                    .parse::<u128>()
+                    .unwrap_or(0);
                 BetAction::Raise(Amount::from_attos(amount))
             }
             BetActionType::AllIn => BetAction::AllIn,

@@ -5,9 +5,9 @@ mod state;
 use std::sync::Arc;
 
 use self::state::TableState;
-use async_graphql::{EmptySubscription, Enum, InputObject, Object, Schema, Request, Response};
-use linera_poker_table::{TableAbi, TableOperation, BetAction, Card, CardReveal};
-use linera_poker_shared::{Suit, Rank};
+use async_graphql::{EmptySubscription, Enum, InputObject, Object, Request, Response, Schema};
+use linera_poker_shared::{Rank, Suit};
+use linera_poker_table::{BetAction, Card, CardReveal, TableAbi, TableOperation};
 use linera_sdk::{
     linera_base_types::{Amount, ApplicationId, ChainId, WithServiceAbi},
     views::View,
@@ -40,8 +40,12 @@ impl Service for TableService {
 
     async fn handle_query(&self, request: Request) -> Response {
         let schema = Schema::build(
-            QueryRoot { state: self.state.clone() },
-            MutationRoot { runtime: self.runtime.clone() },
+            QueryRoot {
+                state: self.state.clone(),
+            },
+            MutationRoot {
+                runtime: self.runtime.clone(),
+            },
             EmptySubscription,
         )
         .finish();
@@ -60,21 +64,33 @@ impl QueryRoot {
         TableStateView {
             game_id: *self.state.game_id.get(),
             phase: format!("{:?}", self.state.phase.get()),
-            players: self.state.players.get().iter().map(|p| PlayerInfoView {
-                seat: format!("{:?}", p.seat),
-                chain_id: p.chain_id.to_string(),
-                stake: p.stake.to_string(),
-                has_folded: p.has_folded,
-                current_bet: p.current_bet.to_string(),
-                has_revealed: p.has_revealed,
-            }).collect(),
+            players: self
+                .state
+                .players
+                .get()
+                .iter()
+                .map(|p| PlayerInfoView {
+                    seat: format!("{:?}", p.seat),
+                    chain_id: p.chain_id.to_string(),
+                    stake: p.stake.to_string(),
+                    has_folded: p.has_folded,
+                    current_bet: p.current_bet.to_string(),
+                    has_revealed: p.has_revealed,
+                })
+                .collect(),
             pot: self.state.pot.get().to_string(),
             current_bet: self.state.current_bet.get().to_string(),
             min_raise: self.state.min_raise.get().to_string(),
-            community_cards: self.state.community_cards.get().iter().map(|c| CardView {
-                suit: format!("{:?}", c.suit),
-                rank: format!("{:?}", c.rank),
-            }).collect(),
+            community_cards: self
+                .state
+                .community_cards
+                .get()
+                .iter()
+                .map(|c| CardView {
+                    suit: format!("{:?}", c.suit),
+                    rank: format!("{:?}", c.rank),
+                })
+                .collect(),
             turn_seat: self.state.turn_seat.get().map(|s| format!("{:?}", s)),
             winner: self.state.winner.get().map(|s| format!("{:?}", s)),
             min_stake: self.state.min_stake.get().to_string(),
@@ -104,14 +120,19 @@ impl QueryRoot {
 
     /// Get players
     async fn players(&self) -> Vec<PlayerInfoView> {
-        self.state.players.get().iter().map(|p| PlayerInfoView {
-            seat: format!("{:?}", p.seat),
-            chain_id: p.chain_id.to_string(),
-            stake: p.stake.to_string(),
-            has_folded: p.has_folded,
-            current_bet: p.current_bet.to_string(),
-            has_revealed: p.has_revealed,
-        }).collect()
+        self.state
+            .players
+            .get()
+            .iter()
+            .map(|p| PlayerInfoView {
+                seat: format!("{:?}", p.seat),
+                chain_id: p.chain_id.to_string(),
+                stake: p.stake.to_string(),
+                has_folded: p.has_folded,
+                current_bet: p.current_bet.to_string(),
+                has_revealed: p.has_revealed,
+            })
+            .collect()
     }
 
     /// Get whose turn it is
@@ -126,10 +147,15 @@ impl QueryRoot {
 
     /// Get community cards
     async fn community_cards(&self) -> Vec<CardView> {
-        self.state.community_cards.get().iter().map(|c| CardView {
-            suit: format!("{:?}", c.suit),
-            rank: format!("{:?}", c.rank),
-        }).collect()
+        self.state
+            .community_cards
+            .get()
+            .iter()
+            .map(|c| CardView {
+                suit: format!("{:?}", c.suit),
+                rank: format!("{:?}", c.rank),
+            })
+            .collect()
     }
 }
 
@@ -140,7 +166,12 @@ struct MutationRoot {
 #[Object]
 impl MutationRoot {
     /// Join table with stake amount
-    async fn join_table(&self, player_chain_id: String, stake: String, hand_app_id: Option<String>) -> bool {
+    async fn join_table(
+        &self,
+        player_chain_id: String,
+        stake: String,
+        hand_app_id: Option<String>,
+    ) -> bool {
         let player_chain = match player_chain_id.parse::<ChainId>() {
             Ok(c) => c,
             Err(_) => return false,
@@ -170,7 +201,11 @@ impl MutationRoot {
             BetActionType::Check => BetAction::Check,
             BetActionType::Call => BetAction::Call,
             BetActionType::Raise => {
-                let amount = action.amount.unwrap_or_default().parse::<u128>().unwrap_or(0);
+                let amount = action
+                    .amount
+                    .unwrap_or_default()
+                    .parse::<u128>()
+                    .unwrap_or(0);
                 BetAction::Raise(Amount::from_attos(amount))
             }
             BetActionType::AllIn => BetAction::AllIn,
@@ -193,21 +228,27 @@ impl MutationRoot {
             Err(_) => return false,
         };
 
-        let revealed_cards: Vec<Card> = cards.iter().map(|c| Card {
-            suit: match c.suit.as_str() {
-                "Hearts" => Suit::Hearts,
-                "Diamonds" => Suit::Diamonds,
-                "Clubs" => Suit::Clubs,
-                _ => Suit::Spades,
-            },
-            rank: parse_rank(&c.rank),
-        }).collect();
+        let revealed_cards: Vec<Card> = cards
+            .iter()
+            .map(|c| Card {
+                suit: match c.suit.as_str() {
+                    "Hearts" => Suit::Hearts,
+                    "Diamonds" => Suit::Diamonds,
+                    "Clubs" => Suit::Clubs,
+                    _ => Suit::Spades,
+                },
+                rank: parse_rank(&c.rank),
+            })
+            .collect();
 
         // Create empty proofs for now (verification disabled for demo)
-        let proofs: Vec<CardReveal> = revealed_cards.iter().map(|card| CardReveal {
-            card: *card,
-            secret: vec![],
-        }).collect();
+        let proofs: Vec<CardReveal> = revealed_cards
+            .iter()
+            .map(|card| CardReveal {
+                card: *card,
+                secret: vec![],
+            })
+            .collect();
 
         let operation = TableOperation::RelayRevealCards {
             player_chain,

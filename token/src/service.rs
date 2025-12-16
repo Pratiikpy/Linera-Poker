@@ -5,13 +5,9 @@ mod state;
 use std::sync::Arc;
 
 use self::state::TokenState;
-use async_graphql::{EmptySubscription, Object, Schema, Request, Response};
+use async_graphql::{EmptySubscription, Object, Request, Response, Schema};
 use linera_poker_token::TokenAbi;
-use linera_sdk::{
-    linera_base_types::WithServiceAbi,
-    views::View,
-    Service, ServiceRuntime,
-};
+use linera_sdk::{linera_base_types::WithServiceAbi, views::View, Service, ServiceRuntime};
 
 pub struct TokenService {
     state: Arc<TokenState>,
@@ -30,12 +26,16 @@ impl Service for TokenService {
         let state = TokenState::load(runtime.root_view_storage_context())
             .await
             .expect("Failed to load state");
-        Self { state: Arc::new(state) }
+        Self {
+            state: Arc::new(state),
+        }
     }
 
     async fn handle_query(&self, request: Request) -> Response {
         let schema = Schema::build(
-            QueryRoot { state: self.state.clone() },
+            QueryRoot {
+                state: self.state.clone(),
+            },
             MutationRoot,
             EmptySubscription,
         )

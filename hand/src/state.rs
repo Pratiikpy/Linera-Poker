@@ -1,10 +1,10 @@
 //! Hand contract state using Linera views
 
+use linera_poker_shared::{Card, GameResultInfo, Seat};
 use linera_sdk::{
     linera_base_types::{Amount, ApplicationId, ChainId},
     views::{linera_views, RegisterView, RootView, ViewStorageContext},
 };
-use linera_poker_shared::{Card, GameResultInfo, Seat};
 
 /// Hand state stored on player's chain (PRIVATE)
 #[derive(RootView)]

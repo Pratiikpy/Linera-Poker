@@ -4,9 +4,9 @@
 //! Each player's cards are on their OWN chain - dealer cannot see them.
 
 use async_graphql::{Enum, SimpleObject};
-use linera_sdk::linera_base_types::{ApplicationId, ChainId, Amount, AccountOwner};
+use linera_sdk::linera_base_types::{AccountOwner, Amount, ApplicationId, ChainId};
 use serde::{Deserialize, Serialize};
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 // ============================================================================
 // CARD REPRESENTATION
@@ -270,9 +270,7 @@ pub enum TableToHandMessage {
         cards: Vec<CardReveal>,
     },
     /// Request player to reveal their cards for showdown
-    RequestReveal {
-        game_id: u64,
-    },
+    RequestReveal { game_id: u64 },
     /// Notify player it's their turn to act
     YourTurn {
         game_id: u64,
@@ -301,14 +299,9 @@ pub enum HandToTableMessage {
         hand_app_id: ApplicationId,
     },
     /// Player acknowledges receiving cards
-    CardsReceived {
-        game_id: u64,
-    },
+    CardsReceived { game_id: u64 },
     /// Player's betting action
-    BetAction {
-        game_id: u64,
-        action: BetAction,
-    },
+    BetAction { game_id: u64, action: BetAction },
     /// Player reveals their hole cards for showdown
     RevealCards {
         game_id: u64,
@@ -326,20 +319,11 @@ pub enum HandToTableMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TableToTokenMessage {
     /// Request player to lock stake for game
-    LockStake {
-        game_id: u64,
-        amount: Amount,
-    },
+    LockStake { game_id: u64, amount: Amount },
     /// Payout winnings to player
-    Payout {
-        game_id: u64,
-        amount: Amount,
-    },
+    Payout { game_id: u64, amount: Amount },
     /// Refund stake (game cancelled)
-    Refund {
-        game_id: u64,
-        amount: Amount,
-    },
+    Refund { game_id: u64, amount: Amount },
 }
 
 // ============================================================================
@@ -349,15 +333,9 @@ pub enum TableToTokenMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TokenToTableMessage {
     /// Stake has been locked
-    StakeLocked {
-        game_id: u64,
-        amount: Amount,
-    },
+    StakeLocked { game_id: u64, amount: Amount },
     /// Stake lock failed (insufficient funds)
-    StakeFailed {
-        game_id: u64,
-        reason: String,
-    },
+    StakeFailed { game_id: u64, reason: String },
 }
 
 // ============================================================================
@@ -373,7 +351,6 @@ pub enum Message {
     // ═══════════════════════════════════════════════════════════════════
     // Table → Hand messages (indices 0-4)
     // ═══════════════════════════════════════════════════════════════════
-
     /// Dealer sends encrypted hole cards to player
     DealCards {
         game_id: u64,
@@ -386,9 +363,7 @@ pub enum Message {
         cards: Vec<CardReveal>,
     },
     /// Request player to reveal their cards for showdown
-    RequestReveal {
-        game_id: u64,
-    },
+    RequestReveal { game_id: u64 },
     /// Notify player it's their turn to act
     YourTurn {
         game_id: u64,
@@ -407,21 +382,15 @@ pub enum Message {
     // ═══════════════════════════════════════════════════════════════════
     // Hand → Table messages (indices 5-9)
     // ═══════════════════════════════════════════════════════════════════
-
     /// Player joins table with stake
     JoinTable {
         stake: Amount,
         hand_app_id: ApplicationId,
     },
     /// Player acknowledges receiving cards
-    CardsReceived {
-        game_id: u64,
-    },
+    CardsReceived { game_id: u64 },
     /// Player's betting action
-    BetAction {
-        game_id: u64,
-        action: BetAction,
-    },
+    BetAction { game_id: u64, action: BetAction },
     /// Player reveals their hole cards for showdown
     RevealCards {
         game_id: u64,
@@ -541,8 +510,8 @@ fn evaluate_five_cards(cards: &[Card]) -> HandScore {
     // Check for straight
     let mut sorted_ranks = ranks.clone();
     sorted_ranks.dedup();
-    let is_straight = sorted_ranks.len() == 5 &&
-        (sorted_ranks[0] - sorted_ranks[4] == 4 ||
+    let is_straight = sorted_ranks.len() == 5
+        && (sorted_ranks[0] - sorted_ranks[4] == 4 ||
          // Ace-low straight (A-2-3-4-5)
          (sorted_ranks == vec![14, 5, 4, 3, 2]));
 
@@ -576,11 +545,20 @@ fn evaluate_five_cards(cards: &[Card]) -> HandScore {
             (HandRank::Straight, vec![ranks[0]])
         }
     } else if rank_groups == vec![3, 1, 1] {
-        (HandRank::ThreeOfAKind, vec![counts[0].0, counts[1].0, counts[2].0])
+        (
+            HandRank::ThreeOfAKind,
+            vec![counts[0].0, counts[1].0, counts[2].0],
+        )
     } else if rank_groups == vec![2, 2, 1] {
-        (HandRank::TwoPair, vec![counts[0].0, counts[1].0, counts[2].0])
+        (
+            HandRank::TwoPair,
+            vec![counts[0].0, counts[1].0, counts[2].0],
+        )
     } else if rank_groups == vec![2, 1, 1, 1] {
-        (HandRank::OnePair, vec![counts[0].0, counts[1].0, counts[2].0, counts[3].0])
+        (
+            HandRank::OnePair,
+            vec![counts[0].0, counts[1].0, counts[2].0, counts[3].0],
+        )
     } else {
         (HandRank::HighCard, ranks)
     };
