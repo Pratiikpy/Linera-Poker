@@ -23,5 +23,10 @@ thiserror.workspace = true
 sha2.workspace = true
 async-graphql = "7.0"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+linera-sdk = { workspace = true, features = ["test", "wasmer"] }
+tokio = { version = "1.40", features = ["macros", "rt-multi-thread"] }
+serde_json = "1.0"
+
 [dev-dependencies]
 linera-sdk = { workspace = true, features = ["test"] }
