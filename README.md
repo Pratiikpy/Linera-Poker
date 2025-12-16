@@ -9,7 +9,7 @@
 
 ---
 
-## 🏆 Linera WaveHack Wave 6 Submission
+## 🏆 Linera WaveHack Wave  Submission
 
 **🎯 For Judges: See [RUN_DEMO.md](RUN_DEMO.md) for 2-minute setup**
 
@@ -286,4 +286,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Linera Poker** - Provably fair poker. Your cards, your chain, your game.
 
 *Featured in Linera Wave Buildathon*
+
 
