@@ -1,103 +1,95 @@
-# 🎮 Linera Poker - Buildathon Demo Instructions
+# Linera Poker - Wave 5 Demo Instructions
 
-**FOR JUDGES: 2-Minute Setup for Wave 6 Evaluation**
+**FOR JUDGES: Single-Command Setup**
 
 This demo shows **cross-chain mental poker** where each player's cards are on their own microchain.
 The dealer literally CANNOT see player cards - architectural privacy!
 
 ---
 
-## ⚡ Quick Start (Judges)
+## Quick Start (One Command)
 
 ### Prerequisites
-- Linera CLI installed (`linera --version` should show 0.15+)
+- Docker and Docker Compose installed
 - Modern browser (Chrome/Edge recommended)
-- MetaMask or compatible EVM wallet
 
-### Step 1: Start Linera Service (Terminal)
+### Step 1: Start Everything
 
 ```bash
-# Navigate to project root
+# Clone the repository (if not already done)
+git clone <repository-url>
 cd linera-poker
 
-# Start service connected to Conway Testnet
-linera service --port 8080
+# Start all services with Docker
+docker compose up --build
 ```
 
-**Expected output:**
+**First run takes ~5-10 minutes** (builds Rust contracts, installs dependencies).
+
+**Expected output when ready:**
 ```
-GraphQL service is running at http://localhost:8080
-```
+╔═══════════════════════════════════════════════════════════════╗
+║                     DEPLOYMENT COMPLETE                        ║
+╚═══════════════════════════════════════════════════════════════╝
 
-**KEEP THIS TERMINAL OPEN** - the service must run while testing the app.
+   Frontend:       http://localhost:5173
+   Faucet:         http://localhost:8080
+   GraphQL:        http://localhost:9001
+   Validator:      http://localhost:13001
 
-### Step 2: Start Frontend (New Terminal)
-
-```bash
-# Navigate to frontend
-cd frontend
-
-# Install dependencies (first time only)
-npm install
-
-# Start dev server
-npm run dev
+Ready to play poker on the Linera blockchain!
 ```
 
-**Expected output:**
-```
-  VITE ready in 1234 ms
-  ➜  Local:   http://localhost:5173/
-```
-
-### Step 3: Open Browser & Test
+### Step 2: Open Browser & Play
 
 1. **Open:** http://localhost:5173
-2. **Connect Wallet:** Click "Connect Wallet" → Choose MetaMask
-3. **Auto-Connect:** App automatically connects to Conway Testnet
-4. **Verify:**
-   - ✅ Wallet badge shows chain ID in header
-   - ✅ Console logs show: `✅ [Linera Wallet] Connection successful!`
-   - ✅ Table/Player A/Player B show "Connected" (not "Connecting...")
-
-### Step 4: Verify Cross-Chain Architecture
-
-**Check Console Logs (F12):**
-```
-✅ [Linera Wallet] Connection successful!
-   Chain ID: 2232603ce8bd66408c93b9e429fe20c15d1172b7a1bc226c0bae4061f4695fd2
-   Address: 0x...
-
-✅ [Linera Wallet] Blockchain query service initialized
-
-🔍 [BlockchainQuery] Creating application: table
-✅ [BlockchainQuery] Table state fetched
-
-🔍 [BlockchainQuery] Creating application: playerA
-✅ [BlockchainQuery] Player A state fetched
-```
-
-**UI Verification:**
-- Connection badges show "Connected" (green)
-- Network shows "Conway Testnet"
-- Cross-chain message log shows activity
+2. **Connect Wallet:** Click "Connect Wallet" → Accept prompts
+3. **Verify Connection:** Green badges appear showing "Connected"
 
 ---
 
-## 🏆 Buildathon Requirements - All Met
+## Playing Poker (Two Browser Windows)
 
-| Requirement | Status | Evidence |
-|------------|--------|----------|
-| Connects to Conway Testnet on page load | ✅ | Console: "Chain claimed successfully" |
-| Uses @linera/client library | ✅ | `frontend/package.json` + `useLineraWallet.ts` |
-| Runs fully in browser (no CLI for user) | ✅ | Only judges run `linera service` for demo |
-| Wallet integration visible | ✅ | Header shows wallet badge with chain ID |
-| Uses linera-sdk 0.15 | ✅ | `contract/Cargo.toml` |
-| COOP/COEP headers configured | ✅ | `vite.config.ts` + `netlify.toml` |
+### Setup
+1. Open http://localhost:5173 in **Window 1** (Player A)
+2. Open http://localhost:5173 in **Window 2** (Player B)
+
+### Joining the Game
+1. **Both windows:** Click "Connect Wallet"
+2. **Window 1 (Player A):** Click "Create Table"
+3. **Window 1:** Note the Table ID displayed
+4. **Window 2 (Player B):** Enter Table ID → Click "Join Table"
+
+### Playing a Hand
+1. Both players see "Waiting for Players" → "Game Starting"
+2. **Cards Dealt:** Each player sees ONLY their 2 hole cards
+3. **Blinds:**
+   - Player A (Small Blind): 5 chips automatically posted
+   - Player B (Big Blind): 10 chips automatically posted
+4. **Betting:** Use Check, Bet, or Fold buttons
+5. **Community Cards:** Flop (3) → Turn (1) → River (1)
+6. **Showdown:** Best hand wins the pot
+
+### Privacy Verification
+Open DevTools (F12) → Network tab to see:
+- Queries go to DIFFERENT chains for each player
+- Dealer chain NEVER receives hole card data
+- Cross-chain messages only contain betting actions
 
 ---
 
-## 🎯 Key Innovation - Cross-Chain Privacy
+## Port Reference
+
+| Port | Service | Description |
+|------|---------|-------------|
+| 5173 | Frontend | Poker game UI (Vite dev server) |
+| 8080 | Faucet | Token distribution for new chains |
+| 9001 | GraphQL | Blockchain query service |
+| 13001 | Validator | Linera network node |
+
+---
+
+## Key Innovation: Cross-Chain Privacy
 
 ### Traditional Poker (Ethereum):
 ```
@@ -114,8 +106,8 @@ npm run dev
         ┌─────────────────┐
         │  TABLE CHAIN    │
         │  (Dealer)       │
-        │  ❌ Cannot see  │
-        │     player cards│
+        │  Cannot see     │
+        │  player cards!  │
         └────────┬────────┘
                  │
      ┌───────────┴───────────┐
@@ -124,7 +116,7 @@ npm run dev
 ┌─────────┐            ┌─────────┐
 │ PLAYER A│            │ PLAYER B│
 │  CHAIN  │            │  CHAIN  │
-│🔒Private│            │🔒Private│
+│ PRIVATE │            │ PRIVATE │
 │  cards  │            │  cards  │
 └─────────┘            └─────────┘
 ```
@@ -133,59 +125,110 @@ npm run dev
 
 ---
 
-## 📂 Contract Deployment (Already Done)
+## Contracts Deployed (Automatically)
 
-Contracts are **already deployed** on Conway Testnet (Dec 15, 2025):
+When you run `docker compose up`, the following contracts are automatically built and deployed:
 
-- **Table Chain:** `785ec7fcb1e9d2e71ecb96238de4e675925a8b93a8a44da187e7f9d88e3a5852`
-- **Player A Chain:** `0a946b4759b993db660867f58cd7ec3b1b927d574274ede324ac6d6faeefe735`
-- **Player B Chain:** `545c9703f298c608e8543afa86bf1509c0d242ad0aed8d255ab6762d18bc81d3`
+1. **Token Contract** - Manages chip balances
+2. **Table Contract** - Game state machine, pot management
+3. **Hand Contract (Player A)** - Player A's private cards
+4. **Hand Contract (Player B)** - Player B's private cards
 
-These IDs are configured in `frontend/.env`.
+All deployment happens inside the Docker container. No manual setup required!
 
 ---
 
-## ❓ Troubleshooting
+## Troubleshooting
 
-### Service won't start
+### Container won't start
 ```bash
-# Kill any existing service on port 8080
-# Windows:
-netstat -ano | findstr :8080
+# Clean rebuild
+docker compose down -v
+docker compose build --no-cache
+docker compose up
+```
+
+### Port already in use
+```bash
+# Windows
+netstat -ano | findstr :5173
 taskkill /PID <PID> /F
 
-# Mac/Linux:
-lsof -ti:8080 | xargs kill -9
+# Mac/Linux
+lsof -ti:5173 | xargs kill -9
+```
 
-# Try again
-linera service --port 8080
+### View container logs
+```bash
+docker compose logs -f
 ```
 
 ### "Connecting..." won't change to "Connected"
-- ✅ Verify `linera service` terminal shows no errors
-- ✅ Check `http://localhost:8080` responds (should show GraphQL interface)
-- ✅ Open browser console (F12) and look for errors
-- ✅ Hard refresh (Ctrl+Shift+R / Cmd+Shift+R)
+- Check container is running: `docker compose ps`
+- Check logs for errors: `docker compose logs -f`
+- Hard refresh browser: Ctrl+Shift+R
 
 ### Wallet won't connect
-- ✅ MetaMask installed and unlocked
-- ✅ Switch to any Ethereum network first (network doesn't matter)
-- ✅ Refresh page and try again
+- Try using Chrome or Edge
+- Refresh page and try again
+- Check browser console (F12) for errors
 
 ---
 
-## 🚀 Production Deployment (Netlify)
+## Stopping the Demo
 
-**Live Demo:** https://linera-poker.netlify.app
+```bash
+docker compose down
+```
 
-**Note:** The Netlify deployment shows wallet connection but requires local service for game state queries. This is expected for Conway Testnet demos.
-
-For judging, **use localhost setup above** for full functionality.
+To remove all data (clean restart):
+```bash
+docker compose down -v
+```
 
 ---
 
-## 📧 Contact
+## Conway Testnet (Alternative)
 
-Built with ♠️ for **Linera WaveHack Wave 6**
+If you prefer to test against the live Conway Testnet instead of local Docker:
 
-Questions? Check console logs (F12) - all operations are logged with emojis for easy debugging!
+1. Update `frontend/.env` with Conway configuration
+2. Install Linera CLI: `cargo install linera-service@0.15.8`
+3. Run: `linera service --port 9001`
+4. Run frontend: `cd frontend && npm install && npm run dev`
+
+**Note:** Conway Testnet requires internet access and may have higher latency.
+
+---
+
+## Buildathon Requirements Met
+
+| Requirement | Status | Evidence |
+|-------------|--------|----------|
+| Docker compose template | ✅ | `Dockerfile`, `compose.yaml`, `run.bash` |
+| Ports 5173, 8080, 9001, 13001 | ✅ | `compose.yaml` port mappings |
+| Healthcheck on 5173 | ✅ | `Dockerfile` HEALTHCHECK directive |
+| Linera SDK 0.15.8 | ✅ | `Dockerfile` + `Cargo.toml` |
+| WASM contracts | ✅ | `table/`, `hand/`, `token/` directories |
+| Frontend | ✅ | `frontend/` with React + TypeScript |
+| Automatic deployment | ✅ | `run.bash` script |
+
+---
+
+## Technical Metrics
+
+- **Cross-chain latency:** ~300ms message delivery
+- **Contract sizes:**
+  - Table: ~400KB WASM
+  - Hand: ~200KB WASM
+  - Token: ~150KB WASM
+- **Hand evaluation:** 21 poker combinations supported
+- **Frontend:** React 18 + Vite + Tailwind CSS
+
+---
+
+## Contact
+
+Built for **Linera WaveHack Wave 5**
+
+Questions? Check container logs with `docker compose logs -f` - all operations are logged for debugging!

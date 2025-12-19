@@ -1,0 +1,49 @@
+# Linera Poker - Docker Compose Configuration
+# Wave 5 Buildathon Submission
+
+name: linera-poker
+
+services:
+  poker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linera-poker-dev
+
+    # Port mappings for all Linera services and frontend
+    ports:
+      - "5173:5173"   # Vite frontend (development server)
+      - "8080:8080"   # Linera faucet service
+      - "9001:9001"   # Linera GraphQL query service
+      - "13001:13001" # Linera validator/shard service
+
+    # Mount project directory for live development
+    volumes:
+      - .:/build
+
+    # Environment variables for Linera services
+    environment:
+      - RUST_LOG=info
+      - RUST_BACKTRACE=1
+      - LINERA_WALLET=/tmp/linera/wallet.json
+      - LINERA_STORAGE=rocksdb:/tmp/linera/client.db
+
+    # Network mode: bridge (default, allows container-to-host communication)
+    network_mode: bridge
+
+    # Resource limits (optional, adjust based on your system)
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+    # Restart policy disabled for debugging
+    # restart: unless-stopped
+
+    # Keep container running for interactive debugging if needed
+    stdin_open: true
+    tty: true

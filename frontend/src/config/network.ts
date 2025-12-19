@@ -38,7 +38,7 @@ const APP_ID_REGEX = /^[a-f0-9]{64}$/
 export function getNetworkConfig(): NetworkConfig {
   const mode = (import.meta.env.VITE_NETWORK_MODE || 'local') as NetworkMode
   const faucetUrl = import.meta.env.VITE_FAUCET_URL || 'http://localhost:8080'
-  const serviceUrl = import.meta.env.VITE_SERVICE_URL || 'http://localhost:8080'
+  const serviceUrl = import.meta.env.VITE_SERVICE_URL || 'http://localhost:9001'
 
   return {
     mode,
@@ -238,7 +238,7 @@ export const ENV = {
 
   // URLs
   faucetUrl: (): string => import.meta.env.VITE_FAUCET_URL || 'http://localhost:8080',
-  serviceUrl: (): string => import.meta.env.VITE_SERVICE_URL || 'http://localhost:8080',
+  serviceUrl: (): string => import.meta.env.VITE_SERVICE_URL || 'http://localhost:9001',
 
   // Table Chain
   tableChainId: (): string => import.meta.env.VITE_TABLE_CHAIN_ID || '',
