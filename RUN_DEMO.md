@@ -7,6 +7,32 @@ The dealer literally CANNOT see player cards - architectural privacy!
 
 ---
 
+## 🌐 Live Demo (Conway Testnet)
+
+**Try the live deployment now:**
+👉 **https://linera-poker-conway.netlify.app**
+
+This production deployment runs on the **public Conway Testnet** - the same Linera blockchain infrastructure that will power real-world applications.
+
+**What's Running:**
+- ✅ Frontend: Deployed on Netlify
+- ✅ Contracts: Live on Conway Testnet (https://indexer.testnet-conway.linera.net)
+- ✅ All 3 contracts deployed:
+  - Table Contract: `5c9f62c08c204329273ec009efe0b1c3ef6bea8ac6a235ebe4353218dda2068f`
+  - Hand A Contract: `e8285954723b6222130669ce37b652104bd9d145ddcdefd34fdb7ff839a5fce6`
+  - Hand B Contract: `e2678414718725fdbda6507e1710e12768a15ac14deee344d6058052d0517be0`
+
+**vs. Local Docker Demo:**
+| Feature | Live (Conway) | Local (Docker) |
+|---------|--------------|----------------|
+| Blockchain | Public testnet | Private network |
+| Deployment | ✅ Already live | One command setup |
+| Internet | Required | Not required |
+| Latency | ~500ms | ~50ms |
+| Best For | Quick testing | Full development |
+
+---
+
 ## Quick Start (One Command)
 
 ### Prerequisites
