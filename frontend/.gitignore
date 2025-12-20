@@ -24,14 +24,14 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment files (keep .env.example and .env.conway for judges)
+# Environment files (keep .env.example, .env.conway, and .env.production for deployment)
 .env
 .env.local
 .env.development
-.env.production
 .env.testnet
 !.env.example
 !.env.conway
+!.env.production
 
 # TypeScript
 *.tsbuildinfo
