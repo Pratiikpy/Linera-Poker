@@ -52,6 +52,103 @@ docker compose up --build
 
 **First run takes ~5-10 minutes** (builds Rust contracts, installs dependencies).
 
+### What Happens During `docker compose up --build`
+
+The single `docker compose up --build` command performs **all** of these steps automatically:
+
+#### 1. Container Build (5-10 minutes first time)
+```dockerfile
+# Inside Dockerfile
+FROM rust:1.86.0 AS builder
+RUN rustup target add wasm32-unknown-unknown
+RUN cargo install linera-service@0.15.8
+RUN apt-get update && apt-get install -y nodejs npm
+```
+
+#### 2. Contract Compilation (Automatic inside container)
+```bash
+cd /build
+cargo build --release --target wasm32-unknown-unknown
+```
+Produces WASM files:
+- `target/wasm32-unknown-unknown/release/table_contract.wasm` (~400KB)
+- `target/wasm32-unknown-unknown/release/table_service.wasm`
+- `target/wasm32-unknown-unknown/release/hand_contract.wasm` (~200KB)
+- `target/wasm32-unknown-unknown/release/hand_service.wasm`
+- `target/wasm32-unknown-unknown/release/token_contract.wasm` (~150KB)
+- `target/wasm32-unknown-unknown/release/token_service.wasm`
+
+#### 3. Linera Network Initialization
+```bash
+# run.bash automatically executes
+eval "$(linera net helper)"
+linera_spawn linera net up --with-faucet
+```
+- Starts local Linera validator on port **13001**
+- Starts faucet service on port **8080**
+- Creates wallet at `/tmp/linera/wallet.json`
+
+#### 4. Chain Creation
+```bash
+linera wallet init --faucet=http://localhost:8080
+linera wallet request-chain  # Creates Table chain
+linera wallet request-chain  # Creates Player A chain
+linera wallet request-chain  # Creates Player B chain
+```
+
+#### 5. Contract Deployment
+```bash
+# Deploy Table contract
+linera publish-and-create \
+  table_contract.wasm table_service.wasm \
+  --json-argument '{"min_stake":100,"max_stake":10000,"small_blind":5,"big_blind":10}'
+
+# Returns Application ID (e.g., 5c9f62c0...)
+TABLE_APP_ID=$(output)
+
+# Deploy Hand contract for Player A
+linera publish-and-create \
+  hand_contract.wasm hand_service.wasm \
+  --json-argument '{"table_chain":"${TABLE_CHAIN_ID}","table_app":"${TABLE_APP_ID}"}'
+
+# Deploy Hand contract for Player B (same process)
+```
+
+#### 6. Backend Service Configuration
+```bash
+# GraphQL service automatically configured with deployed apps
+linera service --port 9001
+```
+**Backend IS configured** - reads wallet containing:
+- All deployed Application IDs
+- All chain IDs
+- Blockchain state
+
+Exposes GraphQL endpoints for all contracts:
+- `http://localhost:9001/chains/${TABLE_CHAIN}/applications/${TABLE_APP}`
+- `http://localhost:9001/chains/${PLAYER_A_CHAIN}/applications/${HAND_APP}`
+- `http://localhost:9001/chains/${PLAYER_B_CHAIN}/applications/${HAND_APP}`
+
+#### 7. Frontend Configuration & Startup
+```bash
+cd frontend
+
+# Auto-generated .env file
+cat > .env << EOF
+VITE_TABLE_CHAIN_ID=${TABLE_CHAIN_ID}
+VITE_TABLE_APP_ID=${TABLE_APP_ID}
+VITE_PLAYER_A_HAND_APP_ID=${PLAYER_A_HAND_APP_ID}
+VITE_PLAYER_B_HAND_APP_ID=${PLAYER_B_HAND_APP_ID}
+VITE_SERVICE_URL=http://localhost:9001
+EOF
+
+npm install
+npm run dev -- --host 0.0.0.0
+```
+Frontend connects to configured backend on port **5173**
+
+**All of this is AUTOMATIC** - you just run `docker compose up --build` and wait!
+
 **Expected output when ready:**
 ```
 ╔═══════════════════════════════════════════════════════════════╗
