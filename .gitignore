@@ -47,3 +47,10 @@ frontend/vite.config.d.ts
 
 # Local Netlify folder
 .netlify
+
+# Deploy output files (temporary)
+*_deploy.txt
+*_deploy_*.txt
+wallet_*.txt
+output.txt
+*.args.json

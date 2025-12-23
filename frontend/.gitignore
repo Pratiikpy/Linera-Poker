@@ -39,3 +39,7 @@ dist-ssr
 # Build outputs
 build
 .cache
+
+# Archives (should not be committed)
+*.tar.gz
+*.zip
