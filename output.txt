@@ -1,0 +1,3 @@
+error: invalid value 'min_stake\:100,\max_stake\:1000,\small_blind\:10,\big_blind\:20} ' for '[PUBLISHER]': Odd number of digits
+
+For more information, try '--help'.

@@ -9,6 +9,22 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 // ============================================================================
+// ZERO-KNOWLEDGE PROOF TYPES (Phase 2: Production-Ready)
+// ============================================================================
+
+pub mod zk;
+
+// Re-export ZK types for convenience
+pub use zk::{CardCommitment, DealingProof, RevealProof};
+
+// ============================================================================
+// R1CS CIRCUITS (Phase 2: arkworks Implementation)
+// ============================================================================
+
+#[cfg(not(target_arch = "wasm32"))]
+pub mod circuits;
+
+// ============================================================================
 // CARD REPRESENTATION
 // ============================================================================
 
@@ -86,11 +102,19 @@ impl Card {
 }
 
 // ============================================================================
-// ENCRYPTED CARD (Mental Poker Commitment)
+// DEPRECATED: SHA-256 COMMITMENTS (Insecure - replaced by ZK-SNARKs)
 // ============================================================================
 
-/// A card encrypted with the dealer's secret key
-/// Player cannot know what card this is until they receive the decryption key
+/// DEPRECATED: Use CardCommitment from zk module instead
+///
+/// This SHA-256 based commitment is INSECURE:
+/// - Exposes dealer_secret during reveal
+/// - No cryptographic hiding property
+/// - Replaced by Pedersen commitments with ZK proofs
+#[deprecated(
+    since = "0.2.0",
+    note = "Use zk::CardCommitment instead - SHA-256 commitments are insecure"
+)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EncryptedCard {
     /// SHA256(card_index || dealer_secret || nonce)
@@ -99,6 +123,7 @@ pub struct EncryptedCard {
     pub nonce: [u8; 16],
 }
 
+#[allow(deprecated)]
 impl EncryptedCard {
     pub fn new(card: Card, dealer_secret: &[u8], nonce: [u8; 16]) -> Self {
         let mut hasher = Sha256::new();
@@ -121,14 +146,24 @@ impl EncryptedCard {
 }
 
 // ============================================================================
-// CARD REVEAL (Proof that card matches commitment)
+// DEPRECATED: PLAINTEXT CARD REVEAL (Privacy Leak)
 // ============================================================================
 
+/// DEPRECATED: Use RevealProof from zk module instead
+///
+/// This plaintext reveal LEAKS PRIVACY:
+/// - Exposes dealer_secret to validators
+/// - No zero-knowledge property
+/// - Replaced by ZK reveal proofs
+#[deprecated(
+    since = "0.2.0",
+    note = "Use zk::RevealProof instead - plaintext reveals leak dealer_secret"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CardReveal {
     /// The actual card
     pub card: Card,
-    /// The dealer's secret used in commitment
+    /// The dealer's secret used in commitment (SECURITY ISSUE!)
     pub secret: Vec<u8>,
 }
 
@@ -349,56 +384,109 @@ pub enum TokenToTableMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Message {
     // ═══════════════════════════════════════════════════════════════════
-    // Table → Hand messages (indices 0-4)
+    // Table → Hand messages (indices 0-9)
     // ═══════════════════════════════════════════════════════════════════
-    /// Dealer sends encrypted hole cards to player
+
+    /// DEPRECATED: Dealer sends encrypted hole cards to player (SHA-256 commitments)
+    /// Use DealCardsZK instead for production
+    #[deprecated(since = "0.2.0", note = "Use DealCardsZK with ZK proofs")]
     DealCards {
         game_id: u64,
+        #[allow(deprecated)]
         encrypted_cards: Vec<EncryptedCard>,
     },
-    /// Dealer sends community cards (with reveal keys)
+
+    /// DEPRECATED: Dealer sends community cards (plaintext reveal)
+    /// Use CommunityCardsZK instead for production
+    #[deprecated(since = "0.2.0", note = "Use CommunityCardsZK with ZK proofs")]
     CommunityCards {
         game_id: u64,
         phase: GamePhase,
+        #[allow(deprecated)]
         cards: Vec<CardReveal>,
     },
+
     /// Request player to reveal their cards for showdown
     RequestReveal { game_id: u64 },
+
     /// Notify player it's their turn to act
     YourTurn {
         game_id: u64,
         current_bet: Amount,
         pot: Amount,
         min_raise: Amount,
+        /// Block height when turn expires (for timeout detection)
+        turn_deadline_block: u64,
     },
+
     /// Game result notification
     GameResult {
         game_id: u64,
         you_won: bool,
         payout: Amount,
         opponent_cards: Option<Vec<Card>>,
+        /// True if opponent was auto-forfeited due to timeout or invalid proof
+        forfeited: bool,
     },
 
     // ═══════════════════════════════════════════════════════════════════
-    // Hand → Table messages (indices 5-9)
+    // NEW: ZK-SNARK VARIANTS (Phase 3: Production-Ready Privacy)
     // ═══════════════════════════════════════════════════════════════════
+
+    /// Dealer sends hole cards with ZK proof (Groth16)
+    /// Replaces DealCards with cryptographic privacy
+    DealCardsZK {
+        game_id: u64,
+        dealing_proof: DealingProof,
+    },
+
+    /// Dealer sends community cards with ZK proof
+    /// Replaces CommunityCards with cryptographic privacy
+    CommunityCardsZK {
+        game_id: u64,
+        phase: GamePhase,
+        dealing_proof: DealingProof,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Hand → Table messages (indices 7-12)
+    // ═══════════════════════════════════════════════════════════════════
+
     /// Player joins table with stake
     JoinTable {
         stake: Amount,
         hand_app_id: ApplicationId,
     },
+
     /// Player acknowledges receiving cards
     CardsReceived { game_id: u64 },
+
     /// Player's betting action
     BetAction { game_id: u64, action: BetAction },
-    /// Player reveals their hole cards for showdown
+
+    /// DEPRECATED: Player reveals cards with plaintext proofs
+    /// Use RevealCardsZK instead for production
+    #[deprecated(since = "0.2.0", note = "Use RevealCardsZK with ZK proofs")]
     RevealCards {
         game_id: u64,
         cards: Vec<Card>,
+        #[allow(deprecated)]
         proofs: Vec<CardReveal>,
     },
+
+    /// NEW: Player reveals cards with ZK proof (Groth16)
+    /// Replaces RevealCards with cryptographic privacy
+    RevealCardsZK {
+        game_id: u64,
+        reveal_proof: RevealProof,
+    },
+
     /// Player leaves table
     LeaveTable,
+
+    /// Anyone can trigger timeout check (permissionless)
+    /// Used to enforce liveness - auto-forfeits stalled players
+    TriggerTimeoutCheck { game_id: u64 },
 }
 
 // ============================================================================
@@ -881,3 +969,10 @@ mod tests {
         assert_eq!(score1.rank, HandRank::Straight);
     }
 }
+
+// ============================================================================
+// ZK-SNARK WASM COMPATIBILITY TEST (Phase 1: Critical Checkpoint)
+// ============================================================================
+
+#[cfg(target_arch = "wasm32")]
+pub mod zk_test;

@@ -177,7 +177,7 @@ export function GameControls({
       )}
 
       {/* Waiting Message */}
-      {hasJoined && !canBet && !canReveal && (
+      {hasJoined && !canBet && !canReveal && !['Settlement', 'Finished'].includes(phase) && (
         <div className="text-center py-6">
           {isMyTurn ? (
             <div className="flex items-center justify-center gap-2">

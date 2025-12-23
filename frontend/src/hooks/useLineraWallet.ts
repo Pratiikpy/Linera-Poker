@@ -17,7 +17,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { useWallet } from '../contexts/WalletContext'
 import { lineraAdapter } from '../lib/linera-adapter'
 import { blockchainQueryService } from '../services/blockchain-query'
 import type { Client } from '@linera/client'
@@ -57,7 +57,7 @@ const CONWAY_TESTNET_FAUCET = 'https://faucet.testnet-conway.linera.net'
  */
 export function useLineraWallet(): UseLineraWalletReturn {
   // Dynamic Labs context - provides EVM wallet
-  const { primaryWallet } = useDynamicContext()
+  const { primaryWallet } = useWallet()
 
   // Linera connection state
   const [client, setClient] = useState<Client | null>(null)
@@ -102,7 +102,7 @@ export function useLineraWallet(): UseLineraWalletReturn {
 
       // Use LineraAdapter to handle the complete connection flow
       const provider = await lineraAdapter.connect(
-        primaryWallet,
+        primaryWallet as any,
         CONWAY_TESTNET_FAUCET
       )
 

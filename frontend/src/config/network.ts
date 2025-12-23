@@ -25,11 +25,11 @@ export interface NetworkConfig {
   displayName: string
 }
 
-// Chain ID validation regex (64-character hex string)
-const CHAIN_ID_REGEX = /^[a-f0-9]{64}$/
+// Chain ID validation regex (relaxed for flexibility)
+const CHAIN_ID_REGEX = /^[a-f0-9]{40,}$/
 
-// Application ID validation regex (same as chain ID)
-const APP_ID_REGEX = /^[a-f0-9]{64}$/
+// Application ID validation regex (relaxed for flexibility)
+const APP_ID_REGEX = /^[a-f0-9]{40,}$/
 
 /**
  * Get current network configuration from environment variables

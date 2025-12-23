@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { DynamicConnectButton, useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { useWallet, ConnectWalletWrapper } from './contexts/WalletContext'
 import { PokerTable } from './components/PokerTable'
 import { PlayerHand } from './components/PlayerHand'
 import { GameControls } from './components/GameControls'
@@ -14,10 +14,10 @@ import { useLineraWallet } from './hooks/useLineraWallet'
 import { RefreshCw, Zap, Shield, Link, ChevronRight, Wallet } from 'lucide-react'
 
 export default function App() {
-  // Dynamic Labs wallet context
-  const { primaryWallet } = useDynamicContext()
+  // Wallet context (abstracts Dynamic Labs / Local Demo)
+  const { primaryWallet } = useWallet()
 
-  // Linera wallet connection (integrates with Dynamic)
+  // Linera wallet connection (integrates with Wallet Context)
   const {
     chainId: walletChainId,
     isConnected: walletConnected,
@@ -38,6 +38,7 @@ export default function App() {
     joinTable,
     placeBet,
     revealCards,
+    startNewGame,
     connectionStatus,
     networkConfig,
   } = useGameState()
@@ -47,6 +48,11 @@ export default function App() {
   const [showFairnessModal, setShowFairnessModal] = useState(false)
   const [joiningPlayer, setJoiningPlayer] = useState<'A' | 'B' | null>(null)
   const [connectionStep, setConnectionStep] = useState(0)
+  const [showServiceWarning, setShowServiceWarning] = useState(false)
+
+  // Check if service is available (for production deployment warning)
+  const isLocalService = networkConfig.serviceUrl?.includes('localhost')
+  const isProduction = import.meta.env.PROD
 
   // Animate intro steps
   useEffect(() => {
@@ -64,6 +70,27 @@ export default function App() {
     return () => clearInterval(interval)
   }, [refreshState])
 
+  // Production service warning
+  useEffect(() => {
+    if (isProduction && isLocalService) {
+      setShowServiceWarning(true)
+    }
+  }, [isProduction, isLocalService])
+
+  // Progressive connection steps simulation based on wallet connection state
+  // CRITICAL: This hook must be before any early returns to satisfy Rules of Hooks
+  useEffect(() => {
+    if (walletConnecting && connectionStep < 4) {
+      const timer = setTimeout(() => {
+        setConnectionStep(s => Math.min(s + 1, 4))
+      }, 800)
+      return () => clearTimeout(timer)
+    }
+    if (walletConnected) {
+      setConnectionStep(4) // All steps complete
+    }
+  }, [walletConnecting, walletConnected, connectionStep])
+
   // Wrap joinTable to show loading modal
   const handleJoinTable = async (player: 'A' | 'B', stake: number) => {
     setJoiningPlayer(player)
@@ -74,18 +101,6 @@ export default function App() {
       setTimeout(() => setJoiningPlayer(null), 800)
     }
   }
-
-  // Check if service is available (for production deployment warning)
-  const isLocalService = networkConfig.serviceUrl?.includes('localhost')
-  const isProduction = import.meta.env.PROD
-  const [showServiceWarning, setShowServiceWarning] = useState(false)
-
-  useEffect(() => {
-    // Show warning if deployed to production but using localhost service
-    if (isProduction && isLocalService) {
-      setShowServiceWarning(true)
-    }
-  }, [isProduction, isLocalService])
 
   // WALLET CONNECTION PROMPT (Show if no Dynamic wallet connected)
   if (!primaryWallet) {
@@ -119,7 +134,7 @@ export default function App() {
             CONNECT YOUR WALLET
           </h2>
           <p className="text-gray-400 mb-6">Connect your EVM wallet to play poker on Linera</p>
-          <DynamicConnectButton>
+          <ConnectWalletWrapper>
             <button
               className="px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105"
               style={{
@@ -130,7 +145,7 @@ export default function App() {
             >
               CONNECT WALLET
             </button>
-          </DynamicConnectButton>
+          </ConnectWalletWrapper>
           <p className="mt-4 text-xs text-gray-600">
             Supports MetaMask, Coinbase Wallet, WalletConnect, and more
           </p>
@@ -140,18 +155,6 @@ export default function App() {
   }
 
   // LINERA INITIALIZATION LOADING (Show while connecting to Linera)
-  // Progressive connection steps simulation based on wallet connection state
-  useEffect(() => {
-    if (walletConnecting && connectionStep < 4) {
-      const timer = setTimeout(() => {
-        setConnectionStep(s => Math.min(s + 1, 4))
-      }, 800)
-      return () => clearTimeout(timer)
-    }
-    if (walletConnected) {
-      setConnectionStep(4) // All steps complete
-    }
-  }, [walletConnecting, walletConnected, connectionStep])
 
   if (walletConnecting) {
     return (
@@ -365,22 +368,20 @@ export default function App() {
             <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--obsidian)] border border-white/5">
               <button
                 onClick={() => setCurrentPlayer('A')}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  currentPlayer === 'A'
-                    ? 'bg-[var(--chain-player-a)] text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
+                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${currentPlayer === 'A'
+                  ? 'bg-[var(--chain-player-a)] text-white shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
                 style={{ fontFamily: 'Bebas Neue', letterSpacing: '0.1em' }}
               >
                 PLAYER A
               </button>
               <button
                 onClick={() => setCurrentPlayer('B')}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  currentPlayer === 'B'
-                    ? 'bg-[var(--chain-player-b)] text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
+                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${currentPlayer === 'B'
+                  ? 'bg-[var(--chain-player-b)] text-white shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
                 style={{ fontFamily: 'Bebas Neue', letterSpacing: '0.1em' }}
               >
                 PLAYER B
@@ -418,9 +419,8 @@ export default function App() {
         {/* Game Layout */}
         <div className="grid lg:grid-cols-3 gap-8 mt-8">
           {/* Player A Hand (Left) */}
-          <div className={`player-area player-area-a transition-all duration-500 ${
-            currentPlayer === 'A' ? 'ring-2 ring-[var(--chain-player-a)] shadow-xl' : 'opacity-60'
-          }`}>
+          <div className={`player-area player-area-a transition-all duration-500 ${currentPlayer === 'A' ? 'ring-2 ring-[var(--chain-player-a)] shadow-xl' : 'opacity-60'
+            }`}>
             <PlayerHand
               player="A"
               handState={playerAState}
@@ -434,6 +434,7 @@ export default function App() {
             <PokerTable
               tableState={tableState}
               currentPlayer={currentPlayer}
+              onStartNewGame={startNewGame}
             />
 
             {/* Game Controls */}
@@ -449,9 +450,8 @@ export default function App() {
           </div>
 
           {/* Player B Hand (Right) */}
-          <div className={`player-area player-area-b transition-all duration-500 ${
-            currentPlayer === 'B' ? 'ring-2 ring-[var(--chain-player-b)] shadow-xl' : 'opacity-60'
-          }`}>
+          <div className={`player-area player-area-b transition-all duration-500 ${currentPlayer === 'B' ? 'ring-2 ring-[var(--chain-player-b)] shadow-xl' : 'opacity-60'
+            }`}>
             <PlayerHand
               player="B"
               handState={playerBState}

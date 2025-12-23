@@ -16,6 +16,21 @@ sha2 = "0.10"
 hex = "0.4"
 rand = "0.8"
 
+# ZK-SNARK dependencies (Phase 1: Infrastructure - WASM Compatibility Validation)
+# Core arkworks primitives - no_std compatible for WASM
+ark-bls12-381 = { version = "0.4", default-features = false, features = ["curve"] }  # BLS12-381 elliptic curve for pairings
+ark-crypto-primitives = { version = "0.4", default-features = false, features = ["r1cs", "crh", "merkle_tree", "commitment", "prf"] }  # Cryptographic primitives as R1CS circuits
+ark-ec = { version = "0.4", default-features = false }  # Elliptic curve abstractions
+ark-ff = { version = "0.4", default-features = false }  # Finite field arithmetic
+ark-groth16 = { version = "0.4", default-features = false }  # Groth16 proving system (efficient verification)
+ark-r1cs-std = { version = "0.4", default-features = false }  # R1CS gadgets for circuit building
+ark-relations = { version = "0.4", default-features = false }  # Constraint system abstractions
+ark-serialize = { version = "0.4", default-features = false }  # Serialization for proofs and keys
+ark-snark = { version = "0.4", default-features = false }  # SNARK trait for verification
+ark-std = { version = "0.4", default-features = false }  # Standard library replacement - no_std compatible
+getrandom = { version = "0.2", features = ["js"] }  # CRITICAL: WASM-compatible RNG using browser crypto API
+rand_chacha = { version = "0.3" }  # ChaCha20 RNG for proof generation
+
 [profile.release]
 opt-level = "z"
 lto = true

@@ -134,6 +134,7 @@ export type MessageType =
   | 'RevealCards'
   | 'GameResult'
   | 'Settlement'
+  | 'StartNewGame'
 
 export interface CrossChainMessage {
   id: string

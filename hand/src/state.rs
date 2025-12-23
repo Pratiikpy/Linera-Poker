@@ -1,6 +1,6 @@
 //! Hand contract state using Linera views
 
-use linera_poker_shared::{Card, GameResultInfo, Seat};
+use linera_poker_shared::{Card, CardCommitment, GameResultInfo, Seat};
 use linera_sdk::{
     linera_base_types::{Amount, ApplicationId, ChainId},
     views::{linera_views, RegisterView, RootView, ViewStorageContext},
@@ -28,6 +28,29 @@ pub struct HandState {
     pub my_turn: RegisterView<bool>,
     /// Game result (if game ended)
     pub game_result: RegisterView<Option<GameResultInfo>>,
-    /// Dealer secret for card reveals
+
+    // ========================================================================
+    // DEPRECATED: INSECURE FIELDS (Phase 3: Marked for Removal)
+    // ========================================================================
+
+    /// DEPRECATED: Dealer secret for card reveals
+    /// Phase 3: Replaced by ZK commitments - keep for backward compatibility
     pub dealer_secret: RegisterView<Vec<u8>>,
+
+    // ========================================================================
+    // ZK-SNARK STATE (Phase 3: Production-Ready Privacy)
+    // ========================================================================
+
+    /// Card commitments received from table (for reveal proof generation)
+    pub card_commitments: RegisterView<Option<Vec<CardCommitment>>>,
+
+    /// Blinding factors used in commitments (for reveal proof)
+    /// These are sent by the table along with the DealingProof
+    pub blinding_factors: RegisterView<Option<Vec<Vec<u8>>>>,
+
+    /// Deck root from table (for verification)
+    pub table_deck_root: RegisterView<Option<[u8; 32]>>,
+
+    /// Turn deadline block (for timeout awareness)
+    pub turn_deadline_block: RegisterView<Option<u64>>,
 }

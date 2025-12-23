@@ -99,7 +99,7 @@ impl QueryRoot {
             big_blind: self.state.big_blind.get().to_string(),
             dealer_button: self.state.dealer_button.get().map(|s| format!("{:?}", s)),
             deck_seed: self.state.deck_seed.get().clone(),
-            dealer_secret: self.state.dealer_secret.get().clone(),
+            // REMOVED: dealer_secret (security improvement - no longer exposed via GraphQL)
         }
     }
 
@@ -332,8 +332,8 @@ struct TableStateView {
     dealer_button: Option<String>,
     /// Deck seed for provable fairness
     deck_seed: Vec<u8>,
-    /// Dealer secret for card commitments
-    dealer_secret: Vec<u8>,
+    // REMOVED: dealer_secret (SECURITY ISSUE - exposed secret via GraphQL!)
+    // Now using ZK commitments instead
 }
 
 #[derive(async_graphql::SimpleObject)]

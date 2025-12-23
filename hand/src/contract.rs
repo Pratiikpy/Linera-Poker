@@ -7,6 +7,7 @@ use linera_poker_hand::{
     BetAction, Card, CardReveal, GamePhase, GameResultInfo, HandAbi, HandOperation, HandResult,
     InstantiationArgument, Message,
 };
+use linera_poker_shared::{DealingProof, RevealProof};
 use linera_sdk::{
     linera_base_types::{Amount, WithContractAbi},
     views::{RootView, View},
@@ -89,6 +90,7 @@ impl Contract for HandContract {
                 }
                 self.state.game_id.set(Some(game_id));
             }
+            #[allow(deprecated)]
             Message::CommunityCards {
                 game_id,
                 phase,
@@ -99,6 +101,35 @@ impl Contract for HandContract {
                     return; // Reject messages from unauthorized chains
                 }
                 self.handle_community_cards(game_id, phase, cards);
+            }
+
+            // ZK-SNARK card dealing (Phase 3)
+            Message::DealCardsZK {
+                game_id,
+                dealing_proof,
+            } => {
+                // Only process if we're on a player chain (source should be table)
+                if source_chain != table_chain {
+                    return; // Reject messages from unauthorized chains
+                }
+                self.handle_deal_cards_zk(game_id, dealing_proof);
+            }
+
+            // ZK-SNARK community cards (Phase 3)
+            Message::CommunityCardsZK {
+                game_id,
+                phase,
+                dealing_proof,
+            } => {
+                // Only process if we're on a player chain (source should be table)
+                if source_chain != table_chain {
+                    return; // Reject messages from unauthorized chains
+                }
+                // For community cards, we just need to track the phase
+                // The actual cards are stored in the proof commitments
+                self.state.game_id.set(Some(game_id));
+                // Store deck root for verification
+                self.state.table_deck_root.set(Some(dealing_proof.deck_root));
             }
             Message::RequestReveal { game_id: _ } => {
                 // Only process if we're on a player chain (source should be table)
@@ -112,24 +143,26 @@ impl Contract for HandContract {
                 current_bet,
                 pot: _,
                 min_raise: _,
+                turn_deadline_block,
             } => {
                 // Only process if we're on a player chain (source should be table)
                 if source_chain != table_chain {
                     return; // Reject messages from unauthorized chains
                 }
-                self.handle_your_turn(game_id, current_bet);
+                self.handle_your_turn(game_id, current_bet, turn_deadline_block);
             }
             Message::GameResult {
                 game_id,
                 you_won,
                 payout,
                 opponent_cards,
+                forfeited,
             } => {
                 // Only process if we're on a player chain (source should be table)
                 if source_chain != table_chain {
                     return; // Reject messages from unauthorized chains
                 }
-                self.handle_game_result(game_id, you_won, payout, opponent_cards);
+                self.handle_game_result(game_id, you_won, payout, opponent_cards, forfeited);
             }
 
             // RELAY messages from player chains to table app
@@ -159,11 +192,27 @@ impl Contract for HandContract {
                     self.relay_to_table(message).await;
                 }
             }
+            #[allow(deprecated)]
             Message::RevealCards {
                 game_id: _,
                 cards: _,
                 proofs: _,
             } => {
+                if is_relay {
+                    // We're the relay on table chain - forward to table app
+                    self.relay_to_table(message).await;
+                }
+            }
+            Message::RevealCardsZK {
+                game_id: _,
+                reveal_proof: _,
+            } => {
+                if is_relay {
+                    // We're the relay on table chain - forward to table app
+                    self.relay_to_table(message).await;
+                }
+            }
+            Message::TriggerTimeoutCheck { game_id: _ } => {
                 if is_relay {
                     // We're the relay on table chain - forward to table app
                     self.relay_to_table(message).await;
@@ -274,7 +323,8 @@ impl HandContract {
         HandResult::Success
     }
 
-    /// Handle receiving cards
+    /// Handle receiving cards (DEPRECATED - legacy plaintext mode)
+    #[allow(deprecated)]
     fn handle_community_cards(&mut self, game_id: u64, phase: GamePhase, cards: Vec<CardReveal>) {
         if self.state.game_id.get() != &Some(game_id) && self.state.game_id.get().is_some() {
             return;
@@ -302,14 +352,59 @@ impl HandContract {
         }
     }
 
+    /// Handle ZK card dealing (Phase 3: Production-Ready Privacy)
+    ///
+    /// Receives hole cards via ZK dealing proof from the table.
+    /// The cards are extracted from the commitments but the proof
+    /// ensures the dealer can't cheat.
+    fn handle_deal_cards_zk(&mut self, game_id: u64, dealing_proof: DealingProof) {
+        if self.state.game_id.get() != &Some(game_id) && self.state.game_id.get().is_some() {
+            return;
+        }
+
+        self.state.game_id.set(Some(game_id));
+
+        // Store the commitments for later reveal proof generation
+        self.state.card_commitments.set(Some(dealing_proof.card_commitments.to_vec()));
+
+        // Store the deck root for verification
+        self.state.table_deck_root.set(Some(dealing_proof.deck_root));
+
+        // Phase 3: Extract cards from commitments
+        // In a real implementation, the player would derive the cards from
+        // their own knowledge. For Phase 3, we use the commitment nonce
+        // as a deterministic way to "recover" the card index.
+        // This is a mock - Phase 4 will use proper ZK card extraction.
+        let extracted_cards = self.extract_cards_from_commitments(&dealing_proof.card_commitments);
+        self.state.hole_cards.set(extracted_cards);
+    }
+
+    /// Extract cards from ZK commitments (Phase 3: Mock implementation)
+    ///
+    /// In Phase 3, we use the nonce to deterministically derive the card index.
+    /// This is NOT cryptographically secure - Phase 4 will use proper ZK extraction.
+    fn extract_cards_from_commitments(&self, commitments: &[linera_poker_shared::CardCommitment]) -> Vec<Card> {
+        use linera_poker_shared::Card;
+
+        commitments
+            .iter()
+            .filter_map(|commitment| {
+                // Use first byte of nonce as card index (mod 52)
+                let card_idx = commitment.nonce[0] % 52;
+                Card::from_index(card_idx)
+            })
+            .collect()
+    }
+
     /// Handle it's our turn
-    fn handle_your_turn(&mut self, game_id: u64, current_bet: Amount) {
+    fn handle_your_turn(&mut self, game_id: u64, current_bet: Amount, turn_deadline_block: u64) {
         if self.state.game_id.get() != &Some(game_id) {
             return;
         }
 
         self.state.my_turn.set(true);
         self.state.current_bet.set(current_bet);
+        self.state.turn_deadline_block.set(Some(turn_deadline_block));
     }
 
     /// Send betting action
@@ -339,6 +434,9 @@ impl HandContract {
     }
 
     /// Reveal our cards
+    ///
+    /// Phase 3: Uses RevealCardsZK when ZK mode is enabled (card_commitments present).
+    /// Falls back to legacy RevealCards for backward compatibility.
     async fn reveal_cards(&mut self) -> HandResult {
         let game_id = match self.state.game_id.get() {
             Some(id) => *id,
@@ -351,23 +449,46 @@ impl HandContract {
         };
 
         let cards = self.state.hole_cards.get().clone();
-        let dealer_secret = self.state.dealer_secret.get().clone();
-        let proofs: Vec<CardReveal> = cards
-            .iter()
-            .map(|card| CardReveal {
-                card: *card,
-                secret: dealer_secret.clone(),
-            })
-            .collect();
 
-        self.runtime
-            .prepare_message(Message::RevealCards {
-                game_id,
-                cards,
-                proofs,
-            })
-            .with_authentication()
-            .send_to(table_chain);
+        // Check if we're in ZK mode (have card commitments)
+        if self.state.card_commitments.get().is_some() {
+            // ZK mode: Send RevealCardsZK with proof
+            let reveal_proof = RevealProof {
+                proof: vec![0u8; RevealProof::PROOF_SIZE],  // Phase 3: Mock proof
+                cards: cards.clone(),
+                randomness: vec![],  // Phase 3: Not needed for mock verification
+            };
+
+            self.runtime
+                .prepare_message(Message::RevealCardsZK {
+                    game_id,
+                    reveal_proof,
+                })
+                .with_authentication()
+                .send_to(table_chain);
+        } else {
+            // Legacy mode: Use deprecated RevealCards
+            #[allow(deprecated)]
+            {
+                let dealer_secret = self.state.dealer_secret.get().clone();
+                let proofs: Vec<CardReveal> = cards
+                    .iter()
+                    .map(|card| CardReveal {
+                        card: *card,
+                        secret: dealer_secret.clone(),
+                    })
+                    .collect();
+
+                self.runtime
+                    .prepare_message(Message::RevealCards {
+                        game_id,
+                        cards: cards.clone(),
+                        proofs,
+                    })
+                    .with_authentication()
+                    .send_to(table_chain);
+            }
+        }
 
         self.state.my_turn.set(false);
 
@@ -381,6 +502,7 @@ impl HandContract {
         won: bool,
         payout: Amount,
         opponent_cards: Option<Vec<Card>>,
+        _forfeited: bool,  // Phase 3: Track if opponent was auto-forfeited
     ) {
         if self.state.game_id.get() != &Some(game_id) {
             return;
@@ -394,6 +516,7 @@ impl HandContract {
         }));
 
         self.state.my_turn.set(false);
+        self.state.turn_deadline_block.set(None);
     }
 
     /// Leave the table

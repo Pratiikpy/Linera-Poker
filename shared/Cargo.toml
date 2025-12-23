@@ -3,9 +3,39 @@ name = "linera-poker-shared"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "setup_keys"
+path = "src/bin/setup_keys.rs"
+required-features = ["setup"]
+
+[features]
+# Feature flag for trusted setup tools (native-only, not compiled for WASM)
+setup = ["chrono"]
+
 [dependencies]
 linera-sdk.workspace = true
 serde.workspace = true
 sha2.workspace = true
 hex.workspace = true
 async-graphql = "7.0"
+
+# ZK-SNARK dependencies (Phase 1: WASM validation, Phase 2: R1CS circuits)
+ark-std = { workspace = true }
+ark-ff = { workspace = true }
+ark-ec = { workspace = true }
+ark-bls12-381 = { workspace = true }
+ark-groth16 = { workspace = true }
+ark-serialize = { workspace = true }
+ark-snark = { workspace = true }
+getrandom = { workspace = true }
+
+# Phase 2: R1CS circuit dependencies (native only)
+ark-r1cs-std = { workspace = true }
+ark-relations = { workspace = true }
+ark-crypto-primitives = { workspace = true }
+
+# Phase 4: Proof generation (native only)
+rand_chacha = { workspace = true }
+
+# Optional dependencies for trusted setup
+chrono = { version = "0.4", optional = true }

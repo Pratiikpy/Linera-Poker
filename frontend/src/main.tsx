@@ -1,18 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
-import { DynamicContextProvider } from '@dynamic-labs/sdk-react-core'
-import { EthereumWalletConnectors } from '@dynamic-labs/ethereum'
+import { WalletProvider } from './contexts/WalletContext'
 import App from './App'
 import './index.css'
 
-/**
- * Dynamic Labs Environment ID from environment variables
- * Get this from: https://app.dynamic.xyz/ → Your Project → Settings → API Keys
- */
+// Check for Dynamic Environment ID mostly for dev feedback
 const DYNAMIC_ENVIRONMENT_ID = import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID
+const IS_LOCAL_DEMO = !DYNAMIC_ENVIRONMENT_ID || import.meta.env.VITE_LOCAL_DEMO === 'true'
 
-if (!DYNAMIC_ENVIRONMENT_ID) {
+if (!DYNAMIC_ENVIRONMENT_ID && !IS_LOCAL_DEMO) {
   console.error(
     '❌ Missing VITE_DYNAMIC_ENVIRONMENT_ID in .env file\n' +
     'Please create a .env file with: VITE_DYNAMIC_ENVIRONMENT_ID=your-id-here\n' +
@@ -20,16 +17,13 @@ if (!DYNAMIC_ENVIRONMENT_ID) {
   )
 }
 
+if (IS_LOCAL_DEMO) {
+  console.log('🎮 Running in LOCAL DEMO MODE - wallet connection simulated')
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <DynamicContextProvider
-      settings={{
-        environmentId: DYNAMIC_ENVIRONMENT_ID,
-        appName: 'Linera Poker',
-        initialAuthenticationMode: 'connect-only',
-        walletConnectors: [EthereumWalletConnectors],
-      }}
-    >
+    <WalletProvider>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -53,6 +47,7 @@ createRoot(document.getElementById('root')!).render(
         }}
       />
       <App />
-    </DynamicContextProvider>
+    </WalletProvider>
   </StrictMode>,
 )
+

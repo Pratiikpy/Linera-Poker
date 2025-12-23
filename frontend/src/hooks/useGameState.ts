@@ -48,7 +48,6 @@ const TABLE_STATE_QUERY = `
       turnSeat
       winner
       deckSeed
-      dealerSecret
       smallBlind
       bigBlind
       dealerButton
@@ -63,10 +62,6 @@ const HAND_STATE_QUERY = `
       gameId
       seat
       holeCards {
-        suit
-        rank
-      }
-      communityCards {
         suit
         rank
       }
@@ -98,7 +93,9 @@ async function graphqlFetch<T>(
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status}`)
+    const text = await response.text()
+    console.error(`GraphQL fetch failed details: ${text}`)
+    throw new Error(`HTTP error: ${response.status} - ${text}`)
   }
 
   const result = await response.json()
@@ -158,10 +155,10 @@ function transformHandState(data: any): HandState | null {
     current_bet: state.currentBet || '0',
     game_result: state.gameResult
       ? {
-          won: state.gameResult.won,
-          payout: state.gameResult.payout,
-          opponent_cards: [], // Not exposed by backend
-        }
+        won: state.gameResult.won,
+        payout: state.gameResult.payout,
+        opponent_cards: [], // Not exposed by backend
+      }
       : null,
   }
 }
@@ -182,6 +179,12 @@ const BET_ACTION_MUTATION = `
 const REVEAL_MUTATION = `
   mutation RevealCards($playerChainId: String!, $cards: [CardInput!]!) {
     revealCards(playerChainId: $playerChainId, cards: $cards)
+  }
+`
+
+const START_NEW_GAME_MUTATION = `
+  mutation StartNewGame {
+    startNewGame
   }
 `
 
@@ -208,6 +211,7 @@ export interface UseGameStateReturn {
   joinTable: (player: 'A' | 'B', stake: number) => Promise<void>
   placeBet: (player: 'A' | 'B', action: BetAction) => Promise<void>
   revealCards: (player: 'A' | 'B') => Promise<void>
+  startNewGame: () => Promise<void>
   refreshState: () => Promise<void>
 }
 
@@ -482,6 +486,38 @@ export function useGameState(): UseGameStateReturn {
     [fetchState, addMessage, playerAState, playerBState]
   )
 
+  // Start new game action - calls TABLE service via HTTP
+  const startNewGame = useCallback(
+    async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        if (!TABLE_CHAIN_ID || !TABLE_APP_ID) {
+          throw new Error('Table not configured. Please run deployment script.')
+        }
+
+        // Call TABLE service via HTTP
+        const tableEndpoint = buildGraphQLEndpoint(TABLE_CHAIN_ID, TABLE_APP_ID)
+
+        await graphqlFetch(tableEndpoint, START_NEW_GAME_MUTATION)
+
+        // Log the action
+        addMessage('StartNewGame', 'Any Player', 'Table')
+
+        // Refresh state after action
+        await fetchState()
+      } catch (err) {
+        console.error('Start new game failed:', err)
+        const friendlyError = getUserFriendlyError(err, 'starting new game')
+        setError(friendlyError)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [fetchState, addMessage]
+  )
+
   return {
     tableState,
     playerAState,
@@ -496,6 +532,7 @@ export function useGameState(): UseGameStateReturn {
     joinTable,
     placeBet: bet,
     revealCards: reveal,
+    startNewGame,
     refreshState: fetchState,
   }
 }

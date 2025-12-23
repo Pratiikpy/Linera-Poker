@@ -6,9 +6,10 @@ import { Trophy, Sparkles } from 'lucide-react'
 interface PokerTableProps {
   tableState: TableState | null
   currentPlayer: 'A' | 'B'
+  onStartNewGame: () => Promise<void>
 }
 
-export function PokerTable({ tableState, currentPlayer: _currentPlayer }: PokerTableProps) {
+export function PokerTable({ tableState, currentPlayer: _currentPlayer, onStartNewGame }: PokerTableProps) {
   const [previousPot, setPreviousPot] = useState('0')
   const [potUpdating, setPotUpdating] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<Array<{ id: number; left: number; delay: number; color: string }>>([])
@@ -155,10 +156,10 @@ export function PokerTable({ tableState, currentPlayer: _currentPlayer }: PokerT
         </div>
       )}
 
-      {/* Winner Overlay with Confetti */}
-      {tableState?.winner && (
+      {/* Winner / Split Pot Overlay */}
+      {((tableState?.winner || ['Settlement', 'Finished'].includes(tableState?.phase || ''))) && (
         <div className="winner-overlay">
-          {/* Confetti Particles */}
+          {/* Confetti Particles - Only for winner, maybe different for split? */}
           {confettiParticles.map((particle) => (
             <div
               key={particle.id}
@@ -171,16 +172,38 @@ export function PokerTable({ tableState, currentPlayer: _currentPlayer }: PokerT
             />
           ))}
 
-          <div className="text-center relative z-10">
-            <Trophy className="w-16 h-16 mx-auto mb-4 text-[var(--gold-bright)] trophy-animated" />
-            <div className="winner-text flex items-center justify-center gap-3">
-              <Sparkles className="w-8 h-8" />
-              {tableState.winner === 'Player1' ? 'PLAYER A WINS!' : 'PLAYER B WINS!'}
-              <Sparkles className="w-8 h-8" />
+          <div className="text-center relative z-10 flex flex-col items-center gap-6">
+            <Trophy className={`w-20 h-20 mb-2 ${tableState?.winner ? 'text-[var(--gold-bright)]' : 'text-[var(--cyan)]'} trophy-animated`} />
+
+            <div className="winner-text flex items-center justify-center gap-4">
+              <Sparkles className="w-10 h-10" />
+              <span className="leading-none pt-2">
+                {tableState?.winner === 'Player1' ? 'PLAYER A WINS!' :
+                  tableState?.winner === 'Player2' ? 'PLAYER B WINS!' :
+                    'SPLIT POT'}
+              </span>
+              <Sparkles className="w-10 h-10" />
             </div>
-            <div className="text-2xl text-[var(--emerald)] mt-2" style={{ fontFamily: 'Bebas Neue' }}>
-              +{formatAmount(tableState.pot || '0')}
+
+            <div className={`text-4xl font-bold tracking-wider ${tableState?.winner ? 'text-[var(--emerald)]' : 'text-[var(--cyan)]'}`} style={{ fontFamily: 'Bebas Neue', textShadow: '0 0 20px rgba(0,0,0,0.5)' }}>
+              {tableState?.winner
+                ? `+${formatAmount(tableState.pot || '0')}`
+                : `POT SPLIT: ${formatAmount(tableState?.pot || '0')}`
+              }
             </div>
+
+            <button
+              onClick={onStartNewGame}
+              className="mt-6 px-8 py-3 rounded-xl text-xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
+              style={{
+                fontFamily: 'Bebas Neue',
+                background: 'var(--gradient-gold)',
+                color: '#1a0f0a',
+                boxShadow: '0 0 20px rgba(212, 160, 25, 0.4)'
+              }}
+            >
+              START NEW GAME
+            </button>
           </div>
         </div>
       )}
@@ -220,9 +243,8 @@ function PlayerSeat({ player, players, isActive, isDealer }: PlayerSeatProps) {
 
   return (
     <div
-      className={`rounded-xl p-3 backdrop-blur-sm transition-all duration-300 relative ${
-        isActive ? 'ring-2' : ''
-      }`}
+      className={`rounded-xl p-3 backdrop-blur-sm transition-all duration-300 relative ${isActive ? 'ring-2' : ''
+        }`}
       style={{
         background: 'rgba(10, 10, 18, 0.8)',
         borderColor: isActive ? chainColor : 'transparent',

@@ -86,6 +86,20 @@ pub enum TableOperation {
     RelayLeaveTable { player_chain: ChainId },
     /// Player acknowledges cards received (relayed message)
     RelayCardsReceived { player_chain: ChainId, game_id: u64 },
+
+    // ========================================================================
+    // TIMEOUT & LIVENESS OPERATIONS (Phase 3: Anti-Griefing)
+    // ========================================================================
+
+    /// Trigger timeout check - can be called by anyone (permissionless)
+    ///
+    /// This operation allows any observer to trigger a timeout check for a game.
+    /// If the current player has exceeded their betting timeout or a player
+    /// in showdown has exceeded their reveal timeout, they will be auto-forfeited.
+    ///
+    /// This is a key anti-griefing mechanism that ensures the game progresses
+    /// even if a player becomes unresponsive or intentionally stalls.
+    TriggerTimeoutCheck { game_id: u64 },
 }
 
 /// Instantiation argument

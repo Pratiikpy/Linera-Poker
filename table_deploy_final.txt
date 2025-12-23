@@ -1,0 +1,508 @@
+linera : 2025-12-23T05:11:29.714422Z  INFO 
+linera: Using default wallet directory 
+C:\Users\prate\AppData\Roaming\linera
+At line:1 char:1
++ linera publish-and-create 
+target/wasm32-unknown-unknown/release/table 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   2025-12-23T05:1...\Roaming\linera:String)  
+   [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandEr 
+   ror
+ 
+2025-12-23T05:11:30.237183Z  INFO linera: 
+Using default wallet directory 
+C:\Users\prate\AppData\Roaming\linera
+2025-12-23T05:11:30.249266Z  INFO linera: 
+Using default wallet directory 
+C:\Users\prate\AppData\Roaming\linera
+2025-12-23T05:11:30.261039Z  INFO linera: 
+Publishing and creating application on chain 1
+066796e64ad50ad2061bc79ca1478aefea80b8b29eeaef
+4cffd6aa64b35f8a1
+2025-12-23T05:11:30.266620Z  INFO 
+linera_client::client_context: Loading 
+bytecode files
+2025-12-23T05:11:30.268640Z  INFO 
+linera_client::client_context: Publishing 
+module
+2025-12-23T05:11:31.335450Z  WARN handle_chain
+_info_query{address="https://linera.blockscope
+.net:443"}: grpc_client: error=Events not 
+found: [EventId { chain_id: 8fd4233c5d03554f87
+d47a711cf70619727ca3d148353446cab81fb56922c9b7
+, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:31.403901Z  WARN handle_chain
+_info_query{address="https://linera.everstake.
+one:443"}: grpc_client: error=Blobs not 
+found: [BlobId { blob_type: ChainDescription, 
+hash: 1066796e64ad50ad2061bc79ca1478aefea80b8b
+29eeaef4cffd6aa64b35f8a1 }]
+2025-12-23T05:11:31.442549Z  WARN handle_chain
+_info_query{address="https://linera-testnet.br
+ightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:31.945899Z  WARN handle_block
+_proposal{address="https://linera-testnet.brig
+htlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:31.980862Z  WARN handle_block
+_proposal{address="https://linera.blockscope.n
+et:443"}: grpc_client: error=Events not 
+found: [EventId { chain_id: 8fd4233c5d03554f87
+d47a711cf70619727ca3d148353446cab81fb56922c9b7
+, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:31.990685Z  WARN handle_block
+_proposal{address="https://linera.everstake.on
+e:443"}: grpc_client: error=Blobs not found: 
+[BlobId { blob_type: ChainDescription, hash: 1
+066796e64ad50ad2061bc79ca1478aefea80b8b29eeaef
+4cffd6aa64b35f8a1 }]
+2025-12-23T05:11:32.037055Z  WARN handle_block
+_proposal{address="https://linera-testnet.sens
+einode.com:443"}: grpc_client: error=Chain is 
+expecting a next block at height 4 but the 
+given block is at height 9 instead
+2025-12-23T05:11:32.046699Z  WARN handle_block
+_proposal{address="https://linera-test.artifac
+t.systems:443"}: grpc_client: error=Chain is 
+expecting a next block at height 4 but the 
+given block is at height 9 instead
+2025-12-23T05:11:32.096900Z  WARN handle_block
+_proposal{address="https://15.204.31.226.sslip
+.io:443"}: grpc_client: error=Chain is 
+expecting a next block at height 8 but the 
+given block is at height 9 instead
+2025-12-23T05:11:32.371463Z  WARN handle_valid
+ated_certificate{address="https://linera-testn
+et.brightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:32.412566Z  WARN handle_valid
+ated_certificate{address="https://linera.block
+scope.net:443"}: grpc_client: error=Events 
+not found: [EventId { chain_id: 8fd4233c5d0355
+4f87d47a711cf70619727ca3d148353446cab81fb56922
+c9b7, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:32.463155Z  WARN handle_valid
+ated_certificate{address="https://linera-testn
+et.senseinode.com:443"}: grpc_client: 
+error=Chain is expecting a next block at 
+height 4 but the given block is at height 9 
+instead
+2025-12-23T05:11:32.477496Z  WARN handle_valid
+ated_certificate{address="https://linera-test.
+artifact.systems:443"}: grpc_client: 
+error=Chain is expecting a next block at 
+height 4 but the given block is at height 9 
+instead
+2025-12-23T05:11:32.526347Z  WARN handle_valid
+ated_certificate{address="https://15.204.31.22
+6.sslip.io:443"}: grpc_client: error=Chain is 
+expecting a next block at height 8 but the 
+given block is at height 9 instead
+2025-12-23T05:11:32.529471Z  WARN handle_valid
+ated_certificate{address="https://linera-testn
+et.brightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:32.596806Z  WARN handle_valid
+ated_certificate{address="https://linera.block
+scope.net:443"}: grpc_client: error=Events 
+not found: [EventId { chain_id: 8fd4233c5d0355
+4f87d47a711cf70619727ca3d148353446cab81fb56922
+c9b7, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:32.811645Z  WARN handle_confi
+rmed_certificate{address="https://linera-testn
+et.brightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 29 }]
+2025-12-23T05:11:32.846847Z  WARN handle_confi
+rmed_certificate{address="https://linera.block
+scope.net:443"}: grpc_client: error=Events 
+not found: [EventId { chain_id: 8fd4233c5d0355
+4f87d47a711cf70619727ca3d148353446cab81fb56922
+c9b7, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+29 }]
+2025-12-23T05:11:33.059113Z  INFO 
+linera_client::client_context: Module 
+published successfully!
+2025-12-23T05:11:33.059130Z  INFO 
+linera_client::client_context: Synchronizing 
+client and processing inbox
+2025-12-23T05:11:33.223537Z  WARN handle_chain
+_info_query{address="https://linera-testnet.br
+ightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:33.251293Z  WARN handle_chain
+_info_query{address="https://linera.blockscope
+.net:443"}: grpc_client: error=Events not 
+found: [EventId { chain_id: 8fd4233c5d03554f87
+d47a711cf70619727ca3d148353446cab81fb56922c9b7
+, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:33.253328Z  WARN handle_chain
+_info_query{address="https://linera.everstake.
+one:443"}: grpc_client: error=Blobs not 
+found: [BlobId { blob_type: ChainDescription, 
+hash: 1066796e64ad50ad2061bc79ca1478aefea80b8b
+29eeaef4cffd6aa64b35f8a1 }]
+2025-12-23T05:11:34.047467Z  WARN handle_chain
+_info_query{address="https://linera-testnet.br
+ightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:34.078258Z  WARN handle_chain
+_info_query{address="https://linera.blockscope
+.net:443"}: grpc_client: error=Events not 
+found: [EventId { chain_id: 8fd4233c5d03554f87
+d47a711cf70619727ca3d148353446cab81fb56922c9b7
+, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:34.084402Z  WARN handle_chain
+_info_query{address="https://linera.everstake.
+one:443"}: grpc_client: error=Blobs not 
+found: [BlobId { blob_type: ChainDescription, 
+hash: 1066796e64ad50ad2061bc79ca1478aefea80b8b
+29eeaef4cffd6aa64b35f8a1 }]
+2025-12-23T05:11:34.290619Z  INFO 
+linera_core::client: 
+find_received_certificates finished
+2025-12-23T05:11:34.459006Z  WARN handle_chain
+_info_query{address="https://linera-testnet.br
+ightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:34.486886Z  WARN handle_chain
+_info_query{address="https://linera.blockscope
+.net:443"}: grpc_client: error=Events not 
+found: [EventId { chain_id: 8fd4233c5d03554f87
+d47a711cf70619727ca3d148353446cab81fb56922c9b7
+, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:34.489677Z  WARN handle_chain
+_info_query{address="https://linera.everstake.
+one:443"}: grpc_client: error=Blobs not 
+found: [BlobId { blob_type: ChainDescription, 
+hash: 1066796e64ad50ad2061bc79ca1478aefea80b8b
+29eeaef4cffd6aa64b35f8a1 }]
+2025-12-23T05:11:34.928016Z  WARN handle_block
+_proposal{address="https://linera-testnet.brig
+htlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:34.957891Z  WARN handle_block
+_proposal{address="https://linera.everstake.on
+e:443"}: grpc_client: error=Blobs not found: 
+[BlobId { blob_type: ChainDescription, hash: 1
+066796e64ad50ad2061bc79ca1478aefea80b8b29eeaef
+4cffd6aa64b35f8a1 }]
+2025-12-23T05:11:34.962232Z  WARN handle_block
+_proposal{address="https://linera.blockscope.n
+et:443"}: grpc_client: error=Events not 
+found: [EventId { chain_id: 8fd4233c5d03554f87
+d47a711cf70619727ca3d148353446cab81fb56922c9b7
+, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:35.021122Z  WARN handle_block
+_proposal{address="https://linera-testnet.sens
+einode.com:443"}: grpc_client: error=Chain is 
+expecting a next block at height 5 but the 
+given block is at height 10 instead
+2025-12-23T05:11:35.031103Z  WARN handle_block
+_proposal{address="https://linera-test.artifac
+t.systems:443"}: grpc_client: error=Chain is 
+expecting a next block at height 5 but the 
+given block is at height 10 instead
+2025-12-23T05:11:35.081408Z  WARN handle_block
+_proposal{address="https://15.204.31.226.sslip
+.io:443"}: grpc_client: error=Chain is 
+expecting a next block at height 8 but the 
+given block is at height 10 instead
+2025-12-23T05:11:35.376591Z  WARN handle_valid
+ated_certificate{address="https://linera-testn
+et.brightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:35.410219Z  WARN handle_valid
+ated_certificate{address="https://linera.evers
+take.one:443"}: grpc_client: error=Blobs not 
+found: [BlobId { blob_type: ChainDescription, 
+hash: 1066796e64ad50ad2061bc79ca1478aefea80b8b
+29eeaef4cffd6aa64b35f8a1 }]
+2025-12-23T05:11:35.410258Z  INFO 
+linera_core::remote_node: validator requested 
+blob but it is not required 
+address="https://linera.everstake.one:443" blo
+b_id=ChainDescription:1066796e64ad50ad2061bc79
+ca1478aefea80b8b29eeaef4cffd6aa64b35f8a1
+2025-12-23T05:11:35.410299Z  WARN handle_valid
+ated_certificate{address="https://linera.block
+scope.net:443"}: grpc_client: error=Events 
+not found: [EventId { chain_id: 8fd4233c5d0355
+4f87d47a711cf70619727ca3d148353446cab81fb56922
+c9b7, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:35.467057Z  WARN handle_valid
+ated_certificate{address="https://linera-testn
+et.senseinode.com:443"}: grpc_client: 
+error=Chain is expecting a next block at 
+height 5 but the given block is at height 10 
+instead
+2025-12-23T05:11:35.477611Z  WARN handle_valid
+ated_certificate{address="https://linera-test.
+artifact.systems:443"}: grpc_client: 
+error=Chain is expecting a next block at 
+height 5 but the given block is at height 10 
+instead
+2025-12-23T05:11:35.527810Z  WARN handle_valid
+ated_certificate{address="https://15.204.31.22
+6.sslip.io:443"}: grpc_client: error=Chain is 
+expecting a next block at height 8 but the 
+given block is at height 10 instead
+2025-12-23T05:11:35.534402Z  WARN handle_valid
+ated_certificate{address="https://linera-testn
+et.brightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 26 }, EventId { 
+chain_id: 8fd4233c5d03554f87d47a711cf70619727c
+a3d148353446cab81fb56922c9b7, stream_id: 
+StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 27 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 28 }, 
+EventId { chain_id: 8fd4233c5d03554f87d47a711c
+f70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:35.596636Z  WARN handle_valid
+ated_certificate{address="https://linera.block
+scope.net:443"}: grpc_client: error=Events 
+not found: [EventId { chain_id: 8fd4233c5d0355
+4f87d47a711cf70619727ca3d148353446cab81fb56922
+c9b7, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+28 }, EventId { chain_id: 8fd4233c5d03554f87d4
+7a711cf70619727ca3d148353446cab81fb56922c9b7, 
+stream_id: StreamId { application_id: System, 
+stream_name: StreamName(00) }, index: 29 }]
+2025-12-23T05:11:35.796788Z  WARN handle_confi
+rmed_certificate{address="https://linera-testn
+et.brightlystake.com:443"}: grpc_client: 
+error=Events not found: [EventId { chain_id: 8
+fd4233c5d03554f87d47a711cf70619727ca3d14835344
+6cab81fb56922c9b7, stream_id: StreamId { 
+application_id: System, stream_name: 
+StreamName(00) }, index: 29 }]
+2025-12-23T05:11:35.837236Z  WARN handle_confi
+rmed_certificate{address="https://linera.block
+scope.net:443"}: grpc_client: error=Events 
+not found: [EventId { chain_id: 8fd4233c5d0355
+4f87d47a711cf70619727ca3d148353446cab81fb56922
+c9b7, stream_id: StreamId { application_id: 
+System, stream_name: StreamName(00) }, index: 
+29 }]
+2025-12-23T05:11:36.033632Z  WARN handle_confi
+rmed_certificate{address="https://linera.evers
+take.one:443"}: grpc_client: error=Blobs not 
+found: [BlobId { blob_type: ServiceBytecode, 
+hash: 3a3ad128a8565627839fe568295aaa7309126685
+31b819137386fa2cf96b51c8 }, BlobId { 
+blob_type: ChainDescription, hash: 1066796e64a
+d50ad2061bc79ca1478aefea80b8b29eeaef4cffd6aa64
+b35f8a1 }]
+2025-12-23T05:11:36.049945Z  INFO linera: 
+Application published successfully!
+2025-12-23T05:11:36.050678Z  INFO linera: 
+Application published and created in 5790 ms
+993c510c0db65faaf19380923f297ecfdc68f9bdb73156cd63a73b512138f576

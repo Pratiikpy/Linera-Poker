@@ -9,41 +9,41 @@
 
 ---
 
-## 🏆 Linera WaveHack Wave  Submission
+## 🏆 Linera WaveHack Wave 5 Submission
 
-**🎯 For Judges: See [RUN_DEMO.md](RUN_DEMO.md) for 2-minute setup**
+> **📋 Changelog:** See [CHANGELOG.md](CHANGELOG.md) for all Wave 4 → Wave 5 improvements
 
-### ✅ Quick Demo (Judges)
+### 🎯 For Judges: Docker Demo (Recommended)
 
-**Terminal 1 - Start Linera Service:**
+**One command deploys everything:**
 ```bash
-linera service --port 8080
+docker compose up --build
 ```
 
-**Terminal 2 - Start Frontend:**
-```bash
-cd frontend
-npm install && npm run dev
-```
+Wait 5-10 minutes for build, then open http://localhost:5173
 
-**Browser:**
-- Open http://localhost:5173
-- Connect wallet (MetaMask)
-- ✅ Table/Player A/Player B show "Connected"
+**Why Docker?** Guarantees reproducible environment with all dependencies. See [RUN_DEMO.md](RUN_DEMO.md) for complete walkthrough.
 
-**📖 Complete Instructions:** [RUN_DEMO.md](RUN_DEMO.md)
+### 🌐 Live Preview (Conway Testnet)
+
+**Preview URL:** https://linera-poker-conway.netlify.app
+
+> ⚠️ **Note:** The Netlify deployment is a **preview only**. Due to Conway Testnet CORS limitations, full gameplay requires the Docker demo above. The Netlify preview demonstrates:
+> - ✅ Professional UI with loading animations
+> - ✅ Wallet connection flow
+> - ⚠️ Game state queries blocked by CORS (infrastructure limitation)
 
 ### 🎯 Key Buildathon Features
 
 | Requirement | Implementation | Evidence |
 |-------------|----------------|----------|
-| **@linera/client Usage** | ✅ `useLineraWallet` hook | `frontend/src/hooks/useLineraWallet.ts:36-56` |
-| **Conway Testnet** | ✅ Auto-connects on load | `frontend/src/App.tsx:61-86` |
-| **Browser-Based** | ✅ No CLI needed | Run `npm run dev` and open browser |
-| **Wallet Integration** | ✅ Faucet wallet | Visible wallet badge in UI |
-| **Linera SDK** | ✅ linera-sdk 0.15 | `table/Cargo.toml:12-13` |
+| **Docker Template** | ✅ Dockerfile + compose.yaml | Ports 5173, 8080, 9001, 13001 |
+| **@linera/client Usage** | ✅ `useLineraWallet` hook | `frontend/src/hooks/useLineraWallet.ts` |
+| **Browser-Based** | ✅ No CLI needed | Run Docker and open browser |
+| **Linera SDK 0.15.8** | ✅ Latest version | `Dockerfile:34` |
+| **Complete Demo** | ✅ One command | `docker compose up --build` |
 
-**Time to verify:** < 4 minutes (see [JUDGING.md](JUDGING.md))
+**Time to verify:** < 10 minutes (see [JUDGING.md](JUDGING.md))
 
 ### ⚡ Performance Highlights
 
@@ -58,7 +58,7 @@ npm install && npm run dev
 
 ---
 
-## Live Deployment (Conway Testnet)
+## Conway Testnet Deployment
 
 **Contracts deployed and verified on Conway Testnet - December 15, 2025**
 
@@ -68,33 +68,14 @@ npm install && npm run dev
 | **Player A Hand** | `0a946b4759b993db660867f58cd7ec3b1b927d574274ede324ac6d6faeefe735` | `07f31116244dad0e56876141fbaa48ddf4dd53131694b821a2859f412c4d4af7` |
 | **Player B Hand** | `545c9703f298c608e8543afa86bf1509c0d242ad0aed8d255ab6762d18bc81d3` | `9380fea81957b433034fcf2f20ba0a46622f156f14167651fc767d9a31cb4f49` |
 
-
-### 🌐 Netlify Deployment
-
-**Live URL:** https://linera-poker.netlify.app
-
-⚠️ **Note:** The Netlify deployment demonstrates wallet connection to Conway Testnet.
-For full gameplay functionality, run locally using the setup above.
-
-**Why?** The game requires a local Linera service (`linera service --port 8080`) to query blockchain state. This is the standard setup for Linera demos and matches the GMIC winner approach.
-
-**What works on Netlify:**
-- ✅ Wallet connection (Dynamic Labs integration)
-- ✅ Conway Testnet chain claiming
-- ✅ Professional UI with loading animations
-- ⚠️ Game state queries require local service
-
-**For full demo:** Follow [RUN_DEMO.md](RUN_DEMO.md) - takes 2 minutes to set up locally.
-
-See [NETLIFY_DEPLOYMENT.md](NETLIFY_DEPLOYMENT.md) for deployment details and options.
-
 ### 🎬 Demo Video
 
-[![Linera Poker Demo](https://img.shields.io/badge/Demo-Coming%20Soon-blue)]()
+[![Linera Poker Demo](https://img.shields.io/badge/Demo-Watch%20Now-red)](https://youtu.be/xoGuE8tNBq0?si=OK5mAzOMQnOPrSQt)
 
 https://youtu.be/xoGuE8tNBq0?si=OK5mAzOMQnOPrSQt
 
 ---
+
 
 ## The Problem
 

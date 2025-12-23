@@ -1,0 +1,18 @@
+linera : error: invalid value 'min_stake\:100,
+\max_stake\:1000,\small_blind\:10,\big_blind\:
+20}' for '[PUBLISHER]': Invalid character 'm' 
+at position 0
+At line:1 char:1
++ linera publish-and-create 
+target/wasm32-unknown-unknown/release/table 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   error: invalid ...' at position 0:String)  
+   [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandEr 
+   ror
+ 
+
+For more information, try '--help'.
