@@ -31,7 +31,7 @@ Open http://localhost:5173 after build completes. **No wallet extension needed**
 
 [![Linera Poker Demo](https://img.shields.io/badge/Demo-Watch%20Now-red)](https://youtu.be/xoGuE8tNBq0?si=OK5mAzOMQnOPrSQt)
 
-https://youtu.be/xoGuE8tNBq0?si=OK5mAzOMQnOPrSQt
+https://youtu.be/6WEojjJAnXo
 
 ### For Judges: 2-Minute Verification
 
@@ -186,3 +186,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Linera Poker** - Provably fair poker. Your cards, your chain, your game.
 
 *Linera WaveHack Wave 6*
+
