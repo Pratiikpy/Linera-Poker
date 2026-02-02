@@ -6,7 +6,8 @@
 
 Each player's hole cards live on their **own private microchain**. The dealer chain orchestrates the game but **physically cannot** access player cards - it's not just encrypted, it's **on a different chain entirely**. Cheating is architecturally impossible.
 
-**Live Demo:** https://linera-poker.netlify.app
+**Live Demo:** https://linera-poker.vercel.app
+**Docker Demo:** `docker compose up --build` then open http://localhost:5173
 **2-Minute Setup:** See [RUN_DEMO.md](https://github.com/Pratiikpy/Linera-Poker/blob/main/RUN_DEMO.md)
 
 ---
@@ -54,9 +55,9 @@ Online poker is a **$60B+ market** plagued by a fundamental trust problem:
 
 ### 2. Conway Testnet Auto-Connection
 - **Problem:** MicroChess (886 USDC winner) didn't connect to Conway - judges noted this!
-- **Solution:** Integrated Dynamic Labs + Linera faucet wallet
+- **Solution:** Direct @linera/client faucet wallet (no external wallet needed)
 - Auto-connects on page load, claims chain automatically
-- **This gives me an advantage over previous winners!** ✅
+- **This gives me an advantage over previous winners!**
 
 ### 3. State Synchronization Without Polling
 - **Problem:** Keep 3 chains in sync during betting rounds
@@ -80,13 +81,12 @@ Online poker is a **$60B+ market** plagued by a fundamental trust problem:
 
 **Frontend:**
 - **React + TypeScript** (800+ LOC) - Type-safe UI
-- **Dynamic Labs** - EVM wallet integration
-- **@linera/client 0.15.4** - Faucet wallet + Conway auto-connection
+- **@linera/client 0.15.8** - Direct faucet wallet + Conway auto-connection
 - **Tailwind CSS** - Professional animations
 
 **DevOps:**
 - **GitHub Actions** - CI/CD with 9 automated checks
-- **Netlify** - Continuous deployment
+- **Vercel** - Production deployment with COOP/COEP headers
 - **Cargo optimization** - LTO + z-opt for minimal WASM size
 
 ---
@@ -149,7 +149,7 @@ Online poker is a **$60B+ market** plagued by a fundamental trust problem:
 ### 1. Conway Testnet Integration = Competitive Advantage
 - MicroChess (top winner) "doesn't appear to connect to Testnet Conway" - judges noted
 - I implemented auto-connection → instant advantage
-- Dynamic Labs + faucet wallet = seamless UX
+- Direct @linera/client faucet pattern = seamless UX
 
 ### 2. Microchains Enable "Impossible" Privacy
 - Mental poker on Ethereum requires ZK-SNARKs (complex, expensive)
@@ -168,7 +168,7 @@ Online poker is a **$60B+ market** plagued by a fundamental trust problem:
 
 ### 5. Documentation = Differentiation
 - Created **13 comprehensive docs** (175KB total)
-- JUDGING.md with 2-minute verification guide
+- README with 2-minute verification guide for judges
 - PERFORMANCE.md with benchmarks
 - MicroChess had minimal docs - I exceeded
 
@@ -219,5 +219,5 @@ Online poker is a **$60B+ market** plagued by a fundamental trust problem:
 ---
 
 **GitHub:** https://github.com/Pratiikpy/Linera-Poker
-**Live Demo:** https://linera-poker.netlify.app
+**Docker Demo:** `docker compose up --build` then http://localhost:5173
 **2-Min Setup:** [RUN_DEMO.md](https://github.com/Pratiikpy/Linera-Poker/blob/main/RUN_DEMO.md)

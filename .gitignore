@@ -54,3 +54,4 @@ frontend/vite.config.d.ts
 wallet_*.txt
 output.txt
 *.args.json
+.vercel

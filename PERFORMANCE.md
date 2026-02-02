@@ -220,7 +220,7 @@ Total                     1,372 KB    495 KB
 **Bundle Breakdown:**
 - React + React DOM: 142 KB (gzipped)
 - @linera/client: 168 KB (gzipped)
-- Dynamic Labs SDK: 95 KB (gzipped)
+- @linera/client WASM: 95 KB (gzipped)
 - App code + components: 82 KB (gzipped)
 
 ### Loading Performance

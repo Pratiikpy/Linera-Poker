@@ -1,81 +1,115 @@
-# Linera Poker  
+# Linera Poker
 
 **The first provably fair poker protocol. Your cards live on YOUR chain.**
 
-[![Live on Conway](https://img.shields.io/badge/Live-Conway%20Testnet-green)](https://testnet-conway.linera.net)
+**[Live Demo](https://linera-poker.vercel.app)** | **Docker:** `docker compose up --build`
+
 [![Built on Linera](https://img.shields.io/badge/Built%20on-Linera-blue)](https://linera.io)
-[![CI Status](https://img.shields.io/badge/CI-passing-brightgreen)](.github/workflows/ci.yml)
+[![Linera SDK](https://img.shields.io/badge/SDK-0.15.8-green)](https://crates.io/crates/linera-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
-## 🏆 Linera WaveHack Wave 5 Submission
+## Quick Start
 
-> **📋 Changelog:** See [CHANGELOG.md](CHANGELOG.md) for all Wave 4 → Wave 5 improvements
+**Live Demo:** https://linera-poker.vercel.app
 
-### 🎯 For Judges: Docker Demo (Recommended)
-
-**One command deploys everything:**
+**Docker (local with blockchain backend):**
 ```bash
 docker compose up --build
 ```
 
-Wait 5-10 minutes for build, then open http://localhost:5173
-
-**Why Docker?** Guarantees reproducible environment with all dependencies. See [RUN_DEMO.md](RUN_DEMO.md) for complete walkthrough.
-
-### 🌐 Live Preview (Conway Testnet)
-
-**Preview URL:** https://linera-poker-conway.netlify.app
-
-> ⚠️ **Note:** The Netlify deployment is a **preview only**. Due to Conway Testnet CORS limitations, full gameplay requires the Docker demo above. The Netlify preview demonstrates:
-> - ✅ Professional UI with loading animations
-> - ✅ Wallet connection flow
-> - ⚠️ Game state queries blocked by CORS (infrastructure limitation)
-
-### 🎯 Key Buildathon Features
-
-| Requirement | Implementation | Evidence |
-|-------------|----------------|----------|
-| **Docker Template** | ✅ Dockerfile + compose.yaml | Ports 5173, 8080, 9001, 13001 |
-| **@linera/client Usage** | ✅ `useLineraWallet` hook | `frontend/src/hooks/useLineraWallet.ts` |
-| **Browser-Based** | ✅ No CLI needed | Run Docker and open browser |
-| **Linera SDK 0.15.8** | ✅ Latest version | `Dockerfile:34` |
-| **Complete Demo** | ✅ One command | `docker compose up --build` |
-
-**Time to verify:** < 10 minutes (see [JUDGING.md](JUDGING.md))
-
-### ⚡ Performance Highlights
-
-| Metric | Value | Industry Standard |
-|--------|-------|-------------------|
-| **Conway Connection Time** | 2.5s | N/A (unique to Linera) |
-| **Cross-Chain Latency** | 180ms | 500ms (Ethereum L2) |
-| **Contract Size** | 655 KB total | < 1 MB limit |
-| **Frontend Load Time** | 1.2s (FCP) | < 2s target |
-
-**Full benchmarks:** [PERFORMANCE.md](PERFORMANCE.md)
+Open http://localhost:5173 after build completes. **No wallet extension needed** - auto-connects to Linera faucet.
 
 ---
 
-## Conway Testnet Deployment
+## Linera WaveHack Wave 6 Submission
 
-**Contracts deployed and verified on Conway Testnet - December 15, 2025**
+> **Changelog:** See [CHANGELOG.md](CHANGELOG.md) for Wave 5 to Wave 6 improvements
 
-| Component | Chain ID | App ID |
-|-----------|----------|--------|
-| **Table (Dealer)** | `785ec7fcb1e9d2e71ecb96238de4e675925a8b93a8a44da187e7f9d88e3a5852` | `972b9df7ede594a4809e36bdda162a8ccf768d7f927759cc12473cdacbc0db09` |
-| **Player A Hand** | `0a946b4759b993db660867f58cd7ec3b1b927d574274ede324ac6d6faeefe735` | `07f31116244dad0e56876141fbaa48ddf4dd53131694b821a2859f412c4d4af7` |
-| **Player B Hand** | `545c9703f298c608e8543afa86bf1509c0d242ad0aed8d255ab6762d18bc81d3` | `9380fea81957b433034fcf2f20ba0a46622f156f14167651fc767d9a31cb4f49` |
-
-### 🎬 Demo Video
+### Demo Video
 
 [![Linera Poker Demo](https://img.shields.io/badge/Demo-Watch%20Now-red)](https://youtu.be/xoGuE8tNBq0?si=OK5mAzOMQnOPrSQt)
 
 https://youtu.be/xoGuE8tNBq0?si=OK5mAzOMQnOPrSQt
 
----
+### For Judges: 2-Minute Verification
 
+**After `docker compose up --build` completes:**
+
+1. Open http://localhost:5173 - should auto-connect (no wallet prompt)
+2. Click "ENTER THE TABLE"
+3. Join as Player A (100 chips) and Player B (100 chips)
+4. Play through betting rounds
+5. Verify via GraphQL:
+
+```bash
+# Table state
+curl -s -X POST http://localhost:8081/chains/${TABLE_CHAIN}/applications/${TABLE_APP} \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ state { gameId phase pot turnSeat communityCards { suit rank } } }"}' | python3 -m json.tool
+
+# Player A hand (private chain)
+curl -s -X POST http://localhost:8081/chains/${PLAYER_A_CHAIN}/applications/${PLAYER_A_APP} \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ state { gameId seat holeCards { suit rank } myTurn } }"}' | python3 -m json.tool
+```
+
+See [BUILDATHON_SUBMISSION.md](BUILDATHON_SUBMISSION.md) for detailed verification.
+
+### What Makes This Unique: Cross-Chain Card Privacy
+
+```
+        +-----------------+
+        |  TABLE CHAIN    |
+        |  (Dealer)       |
+        |  Cannot see     |
+        |  player cards!  |
+        +--------+--------+
+                 |
+     +-----------+-----------+
+     |                       |
+     v                       v
++---------+            +---------+
+| PLAYER A|            | PLAYER B|
+|  CHAIN  |            |  CHAIN  |
+| PRIVATE |            | PRIVATE |
+|  cards  |            |  cards  |
++---------+            +---------+
+```
+
+**The dealer literally CANNOT cheat** - player cards are on separate microchains that the dealer chain has no read access to. This is architecturally impossible on single-chain systems (Ethereum, Solana).
+
+### Buildathon Requirements
+
+| Requirement | Status | Evidence |
+|-------------|--------|----------|
+| Docker Template | Done | `Dockerfile` + `compose.yaml` |
+| @linera/client | Done | `frontend/src/contexts/WalletContext.tsx` - direct faucet pattern |
+| Browser-Based | Done | No CLI needed, auto-connects |
+| Linera SDK 0.15.8 | Done | `Cargo.toml` workspace deps |
+| Complete Demo | Done | `docker compose up --build` |
+
+### Key Wave 6 Change: Removed Dynamic Labs
+
+Wave 5 used Dynamic Labs EVM wallet as a bridge to Linera. Wave 6 uses **direct `@linera/client`** faucet pattern matching winning projects (MicroSkribbl, Battleship):
+
+```typescript
+// WalletContext.tsx - Direct @linera/client usage
+import { initialize, Faucet, Client, signer } from '@linera/client'
+
+await initialize()
+const privateKey = signer.PrivateKey.createRandom()
+const faucet = new Faucet(FAUCET_URL)
+const wallet = await faucet.createWallet()
+const chainId = await faucet.claimChain(wallet, privateKey.address())
+const client = new Client(wallet, privateKey)
+const chain = await client.chain(chainId)
+```
+
+No external wallet needed. Auto-connects on page load.
+
+---
 
 ## The Problem
 
@@ -84,7 +118,6 @@ Online poker is a **$60B+ market** plagued by a fundamental trust problem:
 - Players must trust operators not to peek at cards
 - Centralized servers can be compromised or manipulated
 - No way to verify fairness without trusting the house
-- Collusion detection relies on operator honesty
 
 **Every existing solution requires trusting someone with your cards.**
 
@@ -92,45 +125,9 @@ Online poker is a **$60B+ market** plagued by a fundamental trust problem:
 
 Linera Poker uses **cross-chain architecture** to make cheating **architecturally impossible**:
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  DEALER CHAIN   │     │  PLAYER A CHAIN │     │  PLAYER B CHAIN │
-│  (Table State)  │     │  (A's Cards)    │     │  (B's Cards)    │
-├─────────────────┤     ├─────────────────┤     ├─────────────────┤
-│ - Game phase    │     │ - Hole cards    │     │ - Hole cards    │
-│ - Pot amount    │     │ - Bet history   │     │ - Bet history   │
-│ - Community     │     │ - Token balance │     │ - Token balance │
-│   cards         │     │ (PRIVATE!)      │     │ (PRIVATE!)      │
-└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                       │
-         └───────────────────────┴───────────────────────┘
-                    Cross-Chain Messages ONLY
-                    (Dealer CANNOT access player state)
-```
-
-**Your cards are on YOUR chain. The dealer literally cannot see them.**
-
-## Why This Matters
-
-| Traditional Online Poker | Linera Poker |
-|-------------------------|--------------|
-| Cards stored on operator server | Cards on player's own chain |
-| Trust the house | Trustless by design |
-| Can be hacked/manipulated | Cryptographically secured |
-| Opaque fairness claims | Verifiable on-chain |
-| Centralized control | Player sovereignty |
-
-## How It Works
-
-### Mental Poker Protocol on Microchains
-
-1. **Join**: Players stake tokens on their own chains
-2. **Deal**: Dealer sends encrypted cards cross-chain (can't see contents)
-3. **Bet**: Actions flow as authenticated cross-chain messages
-4. **Reveal**: Players reveal cards only at showdown
-5. **Settle**: Winner receives pot automatically
-
-The game **cannot determine a winner** until both players reveal cards cross-chain. There is no bypass. The protocol enforces fairness.
+- **Your cards are on YOUR chain.** The dealer literally cannot see them.
+- **Cross-chain messages only.** Betting actions flow between chains.
+- **Reveal at showdown only.** Players control when cards are shared.
 
 ## Technical Architecture
 
@@ -138,124 +135,47 @@ The game **cannot determine a winner** until both players reveal cards cross-cha
 
 | Contract | Location | Purpose |
 |----------|----------|---------|
-| **TableContract** | Dealer Chain | Game lifecycle, pot escrow, winner determination |
-| **HandContract** | Player Chain | Private cards, betting actions |
-| **TokenContract** | Player Chain | Chip balances, stake management |
+| **TableContract** | `table/src/contract.rs` | Game lifecycle, pot escrow, winner determination |
+| **HandContract** | `hand/src/contract.rs` | Private cards, betting actions |
+| **TokenContract** | `token/src/contract.rs` | Chip balances, stake management |
 
 ### Key Features
 
-- **Pure Linera SDK 0.15**: No orchestrator, no external services
+- **Pure Linera SDK 0.15.8**: No orchestrator, no external services
 - **Native Cross-Chain**: Uses `send_to()` for all inter-chain communication
 - **Message Authentication**: `with_authentication()` on all messages
-- **Blocking States**: Game cannot proceed without required messages
-- **Per-User Token Sovereignty**: Your chips live on YOUR chain
-
-## Business Model
-
-Linera Poker is designed for sustainable operation:
-
-| Revenue Stream | Rate | Industry Standard |
-|---------------|------|-------------------|
-| **Rake** | 2.5% of pot | 2.5-10% |
-| **Tournament Fees** | 10% of buy-in | 10-15% |
-| **Premium Tables** | Subscription | N/A |
-
-Projected addressable market: $60B+ annually (online poker industry)
+- **COOP/COEP Headers**: Proper SharedArrayBuffer support for WASM
 
 ## Getting Started
 
-### Prerequisites
-
-- Rust toolchain (1.75+)
-- `wasm32-unknown-unknown` target
-- Linera CLI
-- Node.js 18+
-
-### Quick Start
+### Docker (Recommended)
 
 ```bash
-# Clone the repository
-git clone https://github.com/linera-poker/linera-poker
+docker compose up --build
+# Open http://localhost:5173
+```
+
+### Manual Setup
+
+```bash
+# Prerequisites: Rust 1.86+, wasm32-unknown-unknown target, Node.js 22+
 
 # Build contracts
 cargo build --release --target wasm32-unknown-unknown
 
-# Deploy (local development)
-cd deploy && ./deploy.bash
+# Start local network
+eval "$(linera net helper)"
+linera_spawn linera net up --with-faucet
 
-# Start frontend
-cd frontend && npm install && npm run dev
+# Deploy (see run.bash for full deployment script)
 ```
-
-See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions.
-
-## Roadmap
-
-### Phase 1: Core Game (Current - Private Beta)
-- Two-player Texas Hold'em
-- Cross-chain privacy for hole cards
-- Real-time betting rounds
-- Provably fair showdown
-
-### Phase 2: Multi-Table Support ()
-- Multiple concurrent tables
-- Variable stake levels
-- Table discovery and lobbies
-- Spectator mode
-
-### Phase 3: Tournament Features ()
-- Sit-and-go tournaments
-- Multi-table tournaments (MTT)
-- Prize pool distribution
-- Blind level progression
-
-### Phase 4: Mobile & Social ()
-- Progressive web app (PWA)
-- Friend invites and private tables
-- Player profiles and achievements
-- Cross-chain leaderboards
-
-### Phase 5: DAO Governance ()
-- Decentralized rake management
-- Community voting on game rules
-- Revenue sharing for token holders
-- Protocol upgrades via proposals
-
-## Security
-
-### What the Dealer CAN See
-- Game phase, pot amount, community cards
-- Which players have folded
-- Bet amounts
-
-### What the Dealer CANNOT See
-- Player hole cards (stored on player chains)
-- Player reveal keys
-- Player strategy
-
-### Responsible Gaming
-
-We are committed to responsible gaming practices. See our [Responsible Gaming Policy](legal/RESPONSIBLE_GAMING.md).
 
 ## Documentation
 
-### For Judges
-- **[JUDGING.md](JUDGING.md)** - 2-minute verification guide
-- **[PERFORMANCE.md](PERFORMANCE.md)** - Comprehensive benchmarks
-- **[docs/WHY_AMBITIOUS.md](docs/WHY_AMBITIOUS.md)** - Technical complexity explained
-
-### For Developers
+- **[RUN_DEMO.md](RUN_DEMO.md)** - Complete demo walkthrough
+- **[BUILDATHON_SUBMISSION.md](BUILDATHON_SUBMISSION.md)** - Buildathon submission details
+- **[CHANGELOG.md](CHANGELOG.md)** - Wave 5 to Wave 6 changes
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Architecture deep dive
-- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide
-- **[docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md)** - Demo recording guide
-
-## Legal
-
-- [Terms of Service](legal/TERMS.md)
-- [Privacy Policy](legal/PRIVACY.md)
-- [Responsible Gaming](legal/RESPONSIBLE_GAMING.md)
-
-
 
 ## License
 
@@ -265,9 +185,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 **Linera Poker** - Provably fair poker. Your cards, your chain, your game.
 
-*Featured in Linera Wave Buildathon*
-
-
-
-
-
+*Linera WaveHack Wave 6*

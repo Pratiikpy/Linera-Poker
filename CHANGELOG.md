@@ -4,6 +4,49 @@ All notable changes to Linera Poker will be documented in this file.
 
 ---
 
+## [Wave 6] - February 2026
+
+### Breaking Changes
+
+#### Removed Dynamic Labs Dependency
+- **Removed:** `@dynamic-labs/ethereum` and `@dynamic-labs/sdk-react-core` from dependencies
+- **Removed:** `frontend/src/lib/dynamic-signer.ts` (no longer needed)
+- **Rewritten:** `WalletContext.tsx` - now uses direct `@linera/client` faucet pattern
+- **Rewritten:** `useLineraWallet.ts` - simplified hook wrapping WalletContext
+- **Rewritten:** `linera-adapter.ts` - removed DynamicSigner, simplified to utility class
+- **Rewritten:** `App.tsx` - removed Dynamic Labs provider wrapper and EVM wallet prompt
+- **Rewritten:** `main.tsx` - removed Dynamic Labs environment checks
+- **Result:** Zero external wallet dependencies. Auto-connects to Conway Testnet faucet on page load.
+
+### Improvements
+
+#### Direct @linera/client Integration (Matches Winner Pattern)
+- Auto-connects to Conway Testnet faucet on mount (no user action needed)
+- Creates wallet, claims chain, creates client automatically
+- Matches MicroSkribbl/Battleship pattern used by Wave 6 winners
+- Updated `@linera/client` from `0.15.4` to `0.15.8`
+
+#### Fixed Duplicate Polling
+- Removed 3s auto-refresh from `App.tsx` (was doubling with `useGameState`'s 2s poll)
+- Single 2s poll in `useGameState.ts` handles all state updates
+
+#### Wave 6 Branding
+- Updated all references from "Wave 5" to "Wave 6" across:
+  - `compose.yaml`, `Dockerfile`, `run.bash`, `README.md`
+  - `CHANGELOG.md`, `BUILDATHON.md`, `RUN_DEMO.md`, `JUDGING.md`
+
+### Technical Details
+
+| Change | Before (Wave 5) | After (Wave 6) |
+|--------|-----------------|-----------------|
+| Wallet | Dynamic Labs EVM + DynamicSigner bridge | Direct @linera/client faucet |
+| @linera/client | 0.15.4 | 0.15.8 |
+| Dependencies | 3 wallet packages | 0 wallet packages |
+| Auto-connect | Required EVM wallet first | Auto on page load |
+| Polling | 3s (App) + 2s (useGameState) | 2s (useGameState only) |
+
+---
+
 ## [Wave 5] - December 2025
 
 ### 🎯 Wave 4 Feedback Response

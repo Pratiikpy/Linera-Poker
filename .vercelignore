@@ -1,0 +1,12 @@
+target/
+frontend/node_modules/
+frontend/dist/
+node_modules/
+keys/
+*.wasm
+.git/
+shared/
+table/
+hand/
+token/
+legal/

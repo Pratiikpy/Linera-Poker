@@ -4,7 +4,7 @@
 FROM rust:1.86-slim
 
 LABEL maintainer="Linera Poker Team"
-LABEL description="Linera Poker Wave 5 - Cross-chain poker game"
+LABEL description="Linera Poker Wave 6 - Cross-chain poker game"
 LABEL version="1.0.0"
 
 # Prevent interactive prompts during package installation
@@ -30,8 +30,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Linera SDK 0.15.8 from crates.io (latest release, Dec 2024)
-RUN cargo install linera-service@0.15.8 linera-storage-service@0.15.8
+# Install Linera SDK 0.15.8 from crates.io (--locked pins compatible deps)
+RUN cargo install --locked linera-service@0.15.8 linera-storage-service@0.15.8
 
 # Add WebAssembly target for contract compilation
 RUN rustup target add wasm32-unknown-unknown
@@ -49,9 +49,10 @@ WORKDIR /build
 # Expose required ports
 # 5173: Vite frontend development server
 # 8080: Linera faucet service
-# 9001: Linera GraphQL query service
-# 13001: Linera validator/shard service
-EXPOSE 5173 8080 9001 13001
+# 8081: Linera GraphQL node service
+# 9001: Linera validator shard
+# 13001: Linera validator proxy
+EXPOSE 5173 8080 8081 9001 13001
 
 # Healthcheck: Verify frontend is accessible
 # Start period is 5 min to allow for contract build/deployment

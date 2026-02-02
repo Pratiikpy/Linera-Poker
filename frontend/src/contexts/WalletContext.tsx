@@ -1,168 +1,171 @@
+import { createContext, useContext, ReactNode, useState, useCallback, useRef, useEffect } from 'react'
+import { initialize, Faucet, Client, Chain, signer } from '@linera/client'
 
-import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import {
-    DynamicContextProvider,
-    useDynamicContext,
-    DynamicConnectButton as RealDynamicConnectButton
-} from '@dynamic-labs/sdk-react-core'
-import { EthereumWalletConnectors } from '@dynamic-labs/ethereum'
-import { Wallet } from 'lucide-react'
+// Faucet URL - use env var or default to Conway Testnet
+const FAUCET_URL = import.meta.env.VITE_FAUCET_URL || 'https://faucet.testnet-conway.linera.net'
 
-// Environment Config
-const DYNAMIC_ENVIRONMENT_ID = import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID
-const IS_LOCAL_DEMO = !DYNAMIC_ENVIRONMENT_ID || import.meta.env.VITE_LOCAL_DEMO === 'true'
-
-// Wallet Interface
 export interface WalletAccount {
-    address: string
-    connector?: any
+  address: string
 }
 
 interface WalletContextType {
-    primaryWallet: WalletAccount | null
-    isAuthenticated: boolean
-    isLoading: boolean
-    connect: () => void
-    disconnect: () => void
+  primaryWallet: WalletAccount | null
+  chainId: string | null
+  client: Client | null
+  chain: Chain | null
+  isConnected: boolean
+  isConnecting: boolean
+  error: string | null
+  connect: () => Promise<void>
+  disconnect: () => void
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
 export const useWallet = () => {
-    const context = useContext(WalletContext)
-    if (!context) {
-        throw new Error('useWallet must be used within a WalletProvider')
-    }
-    return context
+  const context = useContext(WalletContext)
+  if (!context) {
+    throw new Error('useWallet must be used within a WalletProvider')
+  }
+  return context
 }
 
-// Internal bridge component to extract values from Dynamic Context
-const DynamicBridge = ({ children }: { children: ReactNode }) => {
-    const { primaryWallet, handleLogOut, setShowAuthFlow } = useDynamicContext()
-
-    // Transform Dynamic wallet to our interface
-    const wallet: WalletAccount | null = primaryWallet ? {
-        address: primaryWallet.address,
-        connector: primaryWallet.connector
-    } : null
-
-    return (
-        <WalletContext.Provider value={{
-            primaryWallet: wallet,
-            isAuthenticated: !!primaryWallet,
-            isLoading: false,
-            connect: () => setShowAuthFlow(true),
-            disconnect: handleLogOut
-        }}>
-            {children}
-        </WalletContext.Provider>
-    )
-}
-
-// Provider Component
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
-    // Demo Mode State
-    const [demoWallet, setDemoWallet] = useState<WalletAccount | null>(null)
+  const [wallet, setWallet] = useState<WalletAccount | null>(null)
+  const [chainId, setChainId] = useState<string | null>(null)
+  const [client, setClient] = useState<Client | null>(null)
+  const [chain, setChain] = useState<Chain | null>(null)
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const wasmInitRef = useRef<Promise<unknown> | null>(null)
+  const autoConnectAttempted = useRef(false)
 
-    if (IS_LOCAL_DEMO) {
-        // Local Demo Implementation
-        const mockContext: WalletContextType = {
-            primaryWallet: demoWallet,
-            isAuthenticated: !!demoWallet,
-            isLoading: false,
-            connect: () => {
-                // Simulate connection delay
-                setTimeout(() => {
-                    setDemoWallet({
-                        address: '0xfba350BD9c9bD18866936bB807E09439ba976cCe' // Consistent mock address
-                    })
-                }, 500)
-            },
-            disconnect: () => setDemoWallet(null)
+  const connect = useCallback(async () => {
+    if (isConnecting) return
+
+    try {
+      setIsConnecting(true)
+      setError(null)
+
+      console.log('[Linera Wallet] Connecting to faucet:', FAUCET_URL)
+
+      // Step 1: Initialize WASM (once)
+      if (!wasmInitRef.current) {
+        console.log('[Linera Wallet] Initializing WASM...')
+        wasmInitRef.current = initialize()
+      }
+
+      try {
+        await wasmInitRef.current
+        console.log('[Linera Wallet] WASM initialized')
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        if (!msg.includes('already initialized')) {
+          throw err
         }
+      }
 
-        return (
-            <WalletContext.Provider value={mockContext}>
-                {children}
-            </WalletContext.Provider>
-        )
+      // Step 2: Create signer (in-memory for demo)
+      console.log('[Linera Wallet] Creating signer...')
+      const privateKey = signer.PrivateKey.createRandom()
+      const ownerAddress = privateKey.address()
+
+      // Step 3: Create faucet connection
+      console.log('[Linera Wallet] Creating faucet connection...')
+      const faucet = new Faucet(FAUCET_URL)
+
+      // Step 4: Create wallet
+      console.log('[Linera Wallet] Creating wallet...')
+      const lineraWallet = await faucet.createWallet()
+
+      // Step 5: Claim chain (needs wallet + owner)
+      console.log('[Linera Wallet] Claiming chain...')
+      const claimedChainId = await faucet.claimChain(lineraWallet, ownerAddress)
+      console.log('[Linera Wallet] Chain claimed:', claimedChainId)
+
+      // Step 6: Create client with wallet + signer
+      let lineraClient: Client | null = null
+      let lineraChain: Chain | null = null
+      try {
+        lineraClient = await Promise.race([
+          new Client(lineraWallet, privateKey),
+          new Promise<Client>((_, reject) =>
+            setTimeout(() => reject(new Error('Client creation timeout')), 15000)
+          )
+        ]) as Client
+        console.log('[Linera Wallet] Client created')
+
+        // Step 7: Connect to chain
+        lineraChain = await lineraClient.chain(claimedChainId)
+        console.log('[Linera Wallet] Chain connected')
+      } catch (clientErr) {
+        console.warn('[Linera Wallet] Client creation failed, proceeding with basic connection:', clientErr)
+      }
+
+      // Generate a deterministic address from chain ID for display
+      const displayAddress = `0x${claimedChainId.substring(0, 40)}`
+
+      setWallet({ address: displayAddress })
+      setChainId(claimedChainId)
+      setClient(lineraClient)
+      setChain(lineraChain)
+      setIsConnecting(false)
+
+      console.log('[Linera Wallet] Connected successfully!')
+      console.log('  Chain ID:', claimedChainId)
+    } catch (err) {
+      console.error('[Linera Wallet] Connection failed:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect'
+      setError(errorMessage)
+      setIsConnecting(false)
     }
+  }, [isConnecting])
 
-    // Real Dynamic Provider
-    return (
-        <DynamicContextProvider
-            settings={{
-                environmentId: DYNAMIC_ENVIRONMENT_ID || '', // Safe fallback, main.tsx checks validity
-                appName: 'Linera Poker',
-                initialAuthenticationMode: 'connect-only',
-                walletConnectors: [EthereumWalletConnectors],
-            }}
-        >
-            <DynamicBridge>
-                {children}
-            </DynamicBridge>
-        </DynamicContextProvider>
-    )
+  const disconnect = useCallback(() => {
+    console.log('[Linera Wallet] Disconnecting...')
+    setWallet(null)
+    setChainId(null)
+    setClient(null)
+    setChain(null)
+    setError(null)
+    autoConnectAttempted.current = false
+  }, [])
+
+  // Auto-connect on mount
+  useEffect(() => {
+    if (!autoConnectAttempted.current && !wallet && !isConnecting) {
+      autoConnectAttempted.current = true
+      console.log('[Linera Wallet] Auto-connecting to Conway Testnet...')
+      connect()
+    }
+  }, [connect, wallet, isConnecting])
+
+  const value: WalletContextType = {
+    primaryWallet: wallet,
+    chainId,
+    client,
+    chain,
+    isConnected: !!chainId,
+    isConnecting,
+    error,
+    connect,
+    disconnect,
+  }
+
+  return (
+    <WalletContext.Provider value={value}>
+      {children}
+    </WalletContext.Provider>
+  )
 }
 
-// Unified Connect Button Component
-export const ConnectButton = ({ className, style }: { className?: string, style?: any }) => {
-    const { connect, isAuthenticated, primaryWallet, disconnect } = useWallet()
-
-    if (IS_LOCAL_DEMO) {
-        if (isAuthenticated) {
-            return (
-                <button
-                    onClick={disconnect}
-                    className={className}
-                    style={style}
-                >
-                    DISCONNECT {primaryWallet?.address.slice(0, 6)}...
-                </button>
-            )
-        }
-        return (
-            <button
-                onClick={connect}
-                className={className}
-                style={style}
-            >
-                CONNECT WALLET (DEMO)
-            </button>
-        )
-    }
-
-    // In real mode, we wrap our button or use theirs
-    // But App.tsx customizes the button significantly using DynamicConnectButton children
-    // So we probably want to expose the wrapper
-    return (
-        <RealDynamicConnectButton>
-            {/* Use default or pass children? App.tsx passes a custom button inside. */}
-            {/* To handle custom children correctly, we might need a render prop or similar. */}
-            {/* For now, just render the Real button wrapper which handles the click logic for children */}
-            <div className="dynamic-connect-wrapper">
-                {/* This is tricky because RealDynamicConnectButton expects to wrap the trigger */}
-                {/* We will let App.tsx use ConnectWalletWrapper instead */}
-            </div>
-        </RealDynamicConnectButton>
-    )
-}
-
-// Wrapper for the custom button in App.tsx
+// Simple wrapper for connect button
 export const ConnectWalletWrapper = ({ children }: { children: ReactNode }) => {
-    const { connect, isAuthenticated, disconnect } = useWallet()
+  const { connect, isConnected, disconnect } = useWallet()
 
-    if (IS_LOCAL_DEMO) {
-        return (
-            <div onClick={isAuthenticated ? disconnect : connect}>
-                {children}
-            </div>
-        )
-    }
-
-    return (
-        <RealDynamicConnectButton>
-            {children}
-        </RealDynamicConnectButton>
-    )
+  return (
+    <div onClick={isConnected ? disconnect : () => connect()}>
+      {children}
+    </div>
+  )
 }

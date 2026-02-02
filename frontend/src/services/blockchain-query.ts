@@ -14,8 +14,7 @@
  * - Queries execute via WASM worker, no HTTP needed
  */
 
-import { lineraAdapter } from '../lib/linera-adapter'
-import type { Client, Application } from '@linera/client'
+import type { Client, Chain, Application } from '@linera/client'
 
 /**
  * Application cache to avoid recreating Application instances
@@ -33,9 +32,10 @@ class BlockchainQueryService {
   private static instance: BlockchainQueryService | null = null
   private applicationCache: ApplicationCache = {}
   private client: Client | null = null
+  private chainCache: Map<string, Chain> = new Map()
 
   private constructor() {
-    console.log('🔍 [BlockchainQuery] Service initialized')
+    console.log('[BlockchainQuery] Service initialized')
   }
 
   static getInstance(): BlockchainQueryService {
@@ -51,8 +51,25 @@ class BlockchainQueryService {
    */
   async initialize(client: Client): Promise<void> {
     this.client = client
-    this.applicationCache = {} // Clear cache on re-init
-    console.log('✅ [BlockchainQuery] Initialized with client')
+    this.applicationCache = {}
+    this.chainCache.clear()
+    console.log('[BlockchainQuery] Initialized with client')
+  }
+
+  /**
+   * Get or create a Chain instance
+   */
+  private async getChain(chainId: string): Promise<Chain> {
+    const cached = this.chainCache.get(chainId)
+    if (cached) return cached
+
+    if (!this.client) {
+      throw new Error('Client not initialized. Call initialize() first.')
+    }
+
+    const chain = await this.client.chain(chainId)
+    this.chainCache.set(chainId, chain)
+    return chain
   }
 
   /**
@@ -63,7 +80,6 @@ class BlockchainQueryService {
     appId: string,
     cacheKey: keyof ApplicationCache
   ): Promise<Application> {
-    // Return cached application if available
     if (this.applicationCache[cacheKey]) {
       return this.applicationCache[cacheKey]!
     }
@@ -72,28 +88,24 @@ class BlockchainQueryService {
       throw new Error('Client not initialized. Call initialize() first.')
     }
 
-    console.log(`🔍 [BlockchainQuery] Creating application: ${cacheKey}`)
+    console.log(`[BlockchainQuery] Creating application: ${cacheKey}`)
     console.log(`   Chain: ${chainId.substring(0, 12)}...`)
     console.log(`   App: ${appId.substring(0, 12)}...`)
 
     try {
-      // Use client.frontend() to get the frontend interface
-      const frontend = this.client.frontend()
-
-      // Create application instance for this chain/app
-      const application = await frontend.application(appId)
+      const chain = await this.getChain(chainId)
+      const application = await chain.application(appId)
 
       if (!application) {
         throw new Error(`Failed to create application: ${appId}`)
       }
 
-      // Cache for future use
       this.applicationCache[cacheKey] = application
 
-      console.log(`✅ [BlockchainQuery] Application ${cacheKey} ready`)
+      console.log(`[BlockchainQuery] Application ${cacheKey} ready`)
       return application
     } catch (error) {
-      console.error(`❌ [BlockchainQuery] Failed to create application ${cacheKey}:`, error)
+      console.error(`[BlockchainQuery] Failed to create application ${cacheKey}:`, error)
       throw error
     }
   }
@@ -215,10 +227,11 @@ class BlockchainQueryService {
    * Reset the service (on disconnect)
    */
   reset(): void {
-    console.log('🔴 [BlockchainQuery] Resetting service...')
+    console.log('[BlockchainQuery] Resetting service...')
     this.client = null
     this.applicationCache = {}
-    console.log('✅ [BlockchainQuery] Service reset')
+    this.chainCache.clear()
+    console.log('[BlockchainQuery] Service reset')
   }
 
   /**

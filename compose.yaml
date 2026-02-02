@@ -1,5 +1,5 @@
 # Linera Poker - Docker Compose Configuration
-# Wave 5 Buildathon Submission
+# Wave 6 Buildathon Submission
 
 name: linera-poker
 
@@ -14,8 +14,9 @@ services:
     ports:
       - "5173:5173"   # Vite frontend (development server)
       - "8080:8080"   # Linera faucet service
-      - "9001:9001"   # Linera GraphQL query service
-      - "13001:13001" # Linera validator/shard service
+      - "8081:8081"   # Linera GraphQL node service
+      - "9001:9001"   # Linera validator shard
+      - "13001:13001" # Linera validator proxy
 
     # Mount project directory for live development
     volumes:

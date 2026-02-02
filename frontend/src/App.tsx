@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useWallet, ConnectWalletWrapper } from './contexts/WalletContext'
+import { useWallet } from './contexts/WalletContext'
 import { PokerTable } from './components/PokerTable'
 import { PlayerHand } from './components/PlayerHand'
 import { GameControls } from './components/GameControls'
@@ -10,21 +10,18 @@ import { FairnessModal } from './components/FairnessModal'
 import { ConwayConnectionLoading } from './components/loading/ConwayConnectionLoading'
 import { JoiningTableLoading } from './components/loading/JoiningTableLoading'
 import { useGameState } from './hooks/useGameState'
-import { useLineraWallet } from './hooks/useLineraWallet'
 import { RefreshCw, Zap, Shield, Link, ChevronRight, Wallet } from 'lucide-react'
 
 export default function App() {
-  // Wallet context (abstracts Dynamic Labs / Local Demo)
-  const { primaryWallet } = useWallet()
-
-  // Linera wallet connection (integrates with Wallet Context)
+  // Wallet context (direct @linera/client, auto-connects)
   const {
+    primaryWallet,
     chainId: walletChainId,
     isConnected: walletConnected,
     isConnecting: walletConnecting,
     error: walletError,
-    connectWallet,
-  } = useLineraWallet()
+    connect: connectWallet,
+  } = useWallet()
 
   const {
     tableState,
@@ -48,11 +45,6 @@ export default function App() {
   const [showFairnessModal, setShowFairnessModal] = useState(false)
   const [joiningPlayer, setJoiningPlayer] = useState<'A' | 'B' | null>(null)
   const [connectionStep, setConnectionStep] = useState(0)
-  const [showServiceWarning, setShowServiceWarning] = useState(false)
-
-  // Check if service is available (for production deployment warning)
-  const isLocalService = networkConfig.serviceUrl?.includes('localhost')
-  const isProduction = import.meta.env.PROD
 
   // Animate intro steps
   useEffect(() => {
@@ -62,23 +54,9 @@ export default function App() {
     }
   }, [showIntro, introStep])
 
-  // Auto-refresh game state
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refreshState()
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [refreshState])
-
-  // Production service warning
-  useEffect(() => {
-    if (isProduction && isLocalService) {
-      setShowServiceWarning(true)
-    }
-  }, [isProduction, isLocalService])
+  // NOTE: No auto-refresh here - useGameState already polls at 2s
 
   // Progressive connection steps simulation based on wallet connection state
-  // CRITICAL: This hook must be before any early returns to satisfy Rules of Hooks
   useEffect(() => {
     if (walletConnecting && connectionStep < 4) {
       const timer = setTimeout(() => {
@@ -87,7 +65,7 @@ export default function App() {
       return () => clearTimeout(timer)
     }
     if (walletConnected) {
-      setConnectionStep(4) // All steps complete
+      setConnectionStep(4)
     }
   }, [walletConnecting, walletConnected, connectionStep])
 
@@ -97,70 +75,16 @@ export default function App() {
     try {
       await joinTable(player, stake)
     } finally {
-      // Keep the modal open briefly to show completion
       setTimeout(() => setJoiningPlayer(null), 800)
     }
   }
 
-  // WALLET CONNECTION PROMPT (Show if no Dynamic wallet connected)
-  if (!primaryWallet) {
-    return (
-      <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
-        {/* Production deployment warning banner */}
-        {showServiceWarning && (
-          <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-black p-4 text-center text-sm font-medium z-50">
-            ⚠️ This demo requires running <code className="bg-black/20 px-2 py-1 rounded">linera service --port 8080</code> locally.
-            {' '}See{' '}
-            <a href="https://github.com/YOUR_USERNAME/linera-poker/blob/main/RUN_DEMO.md" className="underline font-bold">
-              setup guide
-            </a>
-            {' '}for instructions.
-            <button
-              onClick={() => setShowServiceWarning(false)}
-              className="ml-4 bg-black/20 px-2 py-1 rounded hover:bg-black/30"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--cyan)] opacity-5 rounded-full blur-[128px] animate-pulse" />
-        </div>
-        <div className="max-w-md mx-auto px-8 text-center relative z-10">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[var(--cyan)] to-[var(--gold)] flex items-center justify-center">
-            <Wallet className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: 'Bebas Neue' }}>
-            CONNECT YOUR WALLET
-          </h2>
-          <p className="text-gray-400 mb-6">Connect your EVM wallet to play poker on Linera</p>
-          <ConnectWalletWrapper>
-            <button
-              className="px-8 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105"
-              style={{
-                fontFamily: 'Bebas Neue',
-                background: 'var(--gradient-gold)',
-                color: '#1a0f0a',
-              }}
-            >
-              CONNECT WALLET
-            </button>
-          </ConnectWalletWrapper>
-          <p className="mt-4 text-xs text-gray-600">
-            Supports MetaMask, Coinbase Wallet, WalletConnect, and more
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // LINERA INITIALIZATION LOADING (Show while connecting to Linera)
-
+  // LINERA CONNECTION LOADING (auto-connecting to Conway Testnet)
   if (walletConnecting) {
     return (
       <ConwayConnectionLoading
         currentStep={connectionStep}
-        evmAddress={primaryWallet?.address}
+        evmAddress={undefined}
       />
     )
   }
@@ -196,11 +120,11 @@ export default function App() {
     )
   }
 
-  // SUCCESS - Show wallet connected badge
+  // NOT CONNECTED YET
   if (!walletConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400">Wallet not connected</p>
+        <p className="text-gray-400">Connecting to Conway Testnet...</p>
       </div>
     )
   }
@@ -219,7 +143,7 @@ export default function App() {
           <div className={`mb-12 transition-all duration-1000 ${introStep >= 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="inline-flex items-center gap-3 mb-6">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--gold-bright)] to-[var(--gold-dim)] flex items-center justify-center shadow-lg" style={{ boxShadow: 'var(--glow-gold)' }}>
-                <span className="text-3xl">♠</span>
+                <span className="text-3xl">&#9824;</span>
               </div>
             </div>
             <h1 className="text-7xl md:text-8xl font-bold tracking-wider mb-4" style={{ fontFamily: 'Bebas Neue' }}>
@@ -314,7 +238,7 @@ export default function App() {
               <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
             <p className="mt-4 text-xs text-gray-500 font-mono">
-              Heads-Up Texas Hold'em • Provably Fair
+              Heads-Up Texas Hold'em - Provably Fair
             </p>
           </div>
         </div>
@@ -329,7 +253,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--gold-bright)] to-[var(--gold-dim)] flex items-center justify-center">
-              <span className="text-lg">♠</span>
+              <span className="text-lg">&#9824;</span>
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: 'Bebas Neue' }}>
@@ -343,7 +267,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-6">
-            {/* Dynamic Wallet Status Badge - CRITICAL for judging */}
+            {/* Wallet Status Badge */}
             {primaryWallet && (
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--emerald)]/10 border border-[var(--emerald)]/30">
                 <Wallet className="w-4 h-4 text-[var(--emerald)]" />
@@ -467,7 +391,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left">
             <p className="text-sm text-gray-400">
-              <span className="text-[var(--gold)]">Linera Poker</span> — Cross-Chain Mental Poker Protocol
+              <span className="text-[var(--gold)]">Linera Poker</span> - Cross-Chain Mental Poker Protocol
             </p>
             <p className="text-xs text-gray-600 mt-1">
               Provably fair poker on Linera

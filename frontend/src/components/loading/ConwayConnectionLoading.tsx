@@ -191,7 +191,7 @@ export function ConwayConnectionLoading({
         {/* Connection Info */}
         <div className="text-xs text-gray-400 font-mono space-y-1">
           <p>Conway Testnet Faucet</p>
-          <p className="text-gray-500">Powered by Dynamic Labs + @linera/client</p>
+          <p className="text-gray-500">Powered by @linera/client</p>
         </div>
 
         {/* Screen reader announcement for current step */}

@@ -1,4 +1,4 @@
-# Linera Poker - Wave 5 Demo Instructions
+# Linera Poker - Wave 6 Demo Instructions
 
 **FOR JUDGES: Single-Command Setup**
 
@@ -59,10 +59,10 @@ The single `docker compose up --build` command performs **all** of these steps a
 #### 1. Container Build (5-10 minutes first time)
 ```dockerfile
 # Inside Dockerfile
-FROM rust:1.86.0 AS builder
+FROM rust:1.86-slim
 RUN rustup target add wasm32-unknown-unknown
-RUN cargo install linera-service@0.15.8
-RUN apt-get update && apt-get install -y nodejs npm
+RUN cargo install linera-service@0.15.8 linera-storage-service@0.15.8
+# Node.js 22 LTS installed for frontend
 ```
 
 #### 2. Contract Compilation (Automatic inside container)
@@ -117,7 +117,7 @@ linera publish-and-create \
 #### 6. Backend Service Configuration
 ```bash
 # GraphQL service automatically configured with deployed apps
-linera service --port 9001
+linera service --port 8081
 ```
 **Backend IS configured** - reads wallet containing:
 - All deployed Application IDs
@@ -125,9 +125,9 @@ linera service --port 9001
 - Blockchain state
 
 Exposes GraphQL endpoints for all contracts:
-- `http://localhost:9001/chains/${TABLE_CHAIN}/applications/${TABLE_APP}`
-- `http://localhost:9001/chains/${PLAYER_A_CHAIN}/applications/${HAND_APP}`
-- `http://localhost:9001/chains/${PLAYER_B_CHAIN}/applications/${HAND_APP}`
+- `http://localhost:8081/chains/${TABLE_CHAIN}/applications/${TABLE_APP}`
+- `http://localhost:8081/chains/${PLAYER_A_CHAIN}/applications/${HAND_APP}`
+- `http://localhost:8081/chains/${PLAYER_B_CHAIN}/applications/${HAND_APP}`
 
 #### 7. Frontend Configuration & Startup
 ```bash
@@ -139,7 +139,7 @@ VITE_TABLE_CHAIN_ID=${TABLE_CHAIN_ID}
 VITE_TABLE_APP_ID=${TABLE_APP_ID}
 VITE_PLAYER_A_HAND_APP_ID=${PLAYER_A_HAND_APP_ID}
 VITE_PLAYER_B_HAND_APP_ID=${PLAYER_B_HAND_APP_ID}
-VITE_SERVICE_URL=http://localhost:9001
+VITE_SERVICE_URL=http://localhost:8081
 EOF
 
 npm install
@@ -157,7 +157,7 @@ Frontend connects to configured backend on port **5173**
 
    Frontend:       http://localhost:5173
    Faucet:         http://localhost:8080
-   GraphQL:        http://localhost:9001
+   GraphQL:        http://localhost:8081
    Validator:      http://localhost:13001
 
 Ready to play poker on the Linera blockchain!
@@ -166,8 +166,8 @@ Ready to play poker on the Linera blockchain!
 ### Step 2: Open Browser & Play
 
 1. **Open:** http://localhost:5173
-2. **Connect Wallet:** Click "Connect Wallet" → Accept prompts
-3. **Verify Connection:** Green badges appear showing "Connected"
+2. **Auto-Connects:** App automatically connects to local Linera faucet (no wallet extension needed)
+3. **Verify Connection:** Green wallet badge appears in header showing chain ID
 
 ---
 
@@ -178,10 +178,9 @@ Ready to play poker on the Linera blockchain!
 2. Open http://localhost:5173 in **Window 2** (Player B)
 
 ### Joining the Game
-1. **Both windows:** Click "Connect Wallet"
-2. **Window 1 (Player A):** Click "Create Table"
-3. **Window 1:** Note the Table ID displayed
-4. **Window 2 (Player B):** Enter Table ID → Click "Join Table"
+1. **Both windows:** Auto-connects on load (no wallet prompt)
+2. **Window 1 (Player A):** Click "ENTER THE TABLE" then join as Player A
+3. **Window 2 (Player B):** Click "ENTER THE TABLE" then join as Player B
 
 ### Playing a Hand
 1. Both players see "Waiting for Players" → "Game Starting"
@@ -290,11 +289,11 @@ docker compose logs -f
 - Check container is running: `docker compose ps`
 - Check logs for errors: `docker compose logs -f`
 - Hard refresh browser: Ctrl+Shift+R
+- Check browser console (F12) for WASM errors
 
-### Wallet won't connect
-- Try using Chrome or Edge
-- Refresh page and try again
-- Check browser console (F12) for errors
+### SharedArrayBuffer error
+- Use `npm run dev` which has COOP/COEP headers configured
+- Chrome/Edge recommended
 
 ---
 
@@ -317,7 +316,7 @@ If you prefer to test against the live Conway Testnet instead of local Docker:
 
 1. Update `frontend/.env` with Conway configuration
 2. Install Linera CLI: `cargo install linera-service@0.15.8`
-3. Run: `linera service --port 9001`
+3. Run: `linera service --port 8081`
 4. Run frontend: `cd frontend && npm install && npm run dev`
 
 **Note:** Conway Testnet requires internet access and may have higher latency.
@@ -352,6 +351,6 @@ If you prefer to test against the live Conway Testnet instead of local Docker:
 
 ## Contact
 
-Built for **Linera WaveHack Wave 5**
+Built for **Linera WaveHack Wave 6**
 
 Questions? Check container logs with `docker compose logs -f` - all operations are logged for debugging!

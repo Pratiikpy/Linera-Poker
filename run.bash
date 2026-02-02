@@ -2,7 +2,7 @@
 
 ################################################################################
 # Linera Poker - Automated Deployment Script
-# Wave 5 Buildathon Submission
+# Wave 6 Buildathon Submission
 #
 # This script orchestrates the complete deployment of a cross-chain poker game:
 # 1. Initializes local Linera network with faucet
@@ -20,8 +20,8 @@ IFS=$'\n\t'        # Safer word splitting
 ################################################################################
 
 FAUCET_URL="http://localhost:8080"
-SERVICE_URL="http://localhost:9001"
-SERVICE_PORT=9001
+SERVICE_URL="http://localhost:8081"
+SERVICE_PORT=8081
 
 # Linera environment paths - must be set as environment variables
 export LINERA_WALLET="/tmp/linera/wallet.json"
@@ -93,7 +93,7 @@ show_banner() {
     ║           ███████╗██║██║ ╚████║███████╗██║  ██║██║  ██║      ║
     ║           ╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝      ║
     ║                                                               ║
-    ║                    🃏  POKER WAVE 5  🃏                       ║
+    ║                    🃏  POKER WAVE 6  🃏                       ║
     ║                                                               ║
     ╚═══════════════════════════════════════════════════════════════╝
 
@@ -456,7 +456,7 @@ show_completion_banner() {
     │                                                               │
     │  🌐 Frontend:       http://localhost:5173                     │
     │  🚰 Faucet:         http://localhost:8080                     │
-    │  🔍 GraphQL:        http://localhost:9001                     │
+    │  🔍 GraphQL:        http://localhost:8081                     │
     │  ⛓️  Validator:      http://localhost:13001                    │
     │                                                               │
     ├───────────────────────────────────────────────────────────────┤

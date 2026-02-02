@@ -43,3 +43,4 @@ build
 # Archives (should not be committed)
 *.tar.gz
 *.zip
+.vercel

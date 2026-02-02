@@ -7,8 +7,8 @@
  * and autocomplete in your IDE.
  */
 interface ImportMetaEnv {
-  // Dynamic Labs Configuration
-  readonly VITE_DYNAMIC_ENVIRONMENT_ID: string
+  // Linera Faucet URL (optional, defaults to Conway Testnet)
+  readonly VITE_FAUCET_URL: string
 
   // Linera Poker Configuration
   readonly VITE_NETWORK_MODE: string
